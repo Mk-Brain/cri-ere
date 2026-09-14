@@ -1,0 +1,139 @@
+/* Responsive pour tablettes */
+@media (min-width: 600px) and (max-width: 1024px) {
+    body {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+    }
+    form {
+        width: 70vw;
+        min-width: 0;
+        max-width: 90vw;
+        margin: 20px auto;
+        padding: 20px 4vw;
+        border-width: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.18);
+    }
+    input[type="text"],input[type="tel"],input[type="submit"],.text select,input[type="date"],input[type="time"] {
+        width: 100%;
+        font-size: 1.1em;
+        padding: 12px;
+        border-radius: 40px;
+    }
+    .bouton {
+        width: 100%;
+        margin-left: 0;
+        margin-bottom: 20px;
+        font-size: 1.1em;
+        padding: 12px;
+        border-radius: 40px;
+    }
+    .placeholder {
+        margin-left: 0;
+        font-size: 1.1em;
+    }
+    form h2 {
+        font-size: 1.4em;
+        margin-bottom: 18px;
+    }
+}
+form {
+    width: 50%;
+    background-color: transparent;
+    backdrop-filter: blur(35px);
+    padding: 20px 30px; 
+    border: 45px solid transparent;
+    border-radius: 15px;
+	box-shadow: 0 0 10px rgb(0, 0,0,0.2) ;
+	
+}
+/* Responsive pour petits écrans */
+@media (max-width: 900px) {
+    body {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+    }
+    form {
+        width: 98vw;
+        min-width: 0;
+        max-width: 100vw;
+        margin: 10px auto;
+        padding: 10px 5vw;
+        border-width: 10px;
+        border-radius: 10px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.15);
+    }
+    input[type="text"],input[type="tel"],input[type="submit"],.text select,input[type="date"],input[type="time"] {
+        width: 98%;
+        font-size: 1em;
+        padding: 10px;
+        border-radius: 30px;
+    }
+    .bouton {
+        width: 100%;
+        margin-left: 0;
+        margin-bottom: 15px;
+        font-size: 1em;
+        padding: 10px;
+        border-radius: 30px;
+    }
+    .placeholder {
+        margin-left: 0;
+        font-size: 1em;
+    }
+    form h2 {
+        font-size: 1.2em;
+        margin-bottom: 15px;
+    }
+}
+form h2{
+    text-align: center;
+    margin-bottom: 30px;
+}
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+.text ::placeholder{
+    font-family: cursive;
+}
+input[type="text"],input[type="tel"],input[type="submit"],.text select,input[type="date"],input[type="time"]{
+    border: 5px solid gray;
+    border-radius: 100px ;
+    padding: 3%;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: cursive;
+}
+input[type="submit"]{
+    background:linear-gradient(to top left ,gray,white,pink,gray,white);
+    font-family: cursive;
+}
+.verif i {
+    font-family: cursive;
+    color :azure;
+}
+.bouton {
+    margin-left: 80%;
+    margin-bottom: 20%;
+    width: 100px; 
+    padding: 20x; 
+    padding-bottom: 20px;
+    margin-bottom: 35px; 
+    border: 5px solid #258; 
+    border-radius: 100px;
+    border: 5px solid #485;
+    background:linear-gradient(to top left ,gray,white,pink,gray,white);
+    font-family: cursive;
+    font-size:small;
+}
+
+.placeholder{
+    margin-left: 7%;
+    color:azure;
+    font-family: cursive;
+}
