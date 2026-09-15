@@ -10,7 +10,13 @@ import At1 from "../assets/images/atelier1.jpg";
 import At2 from "../assets/images/at2.jpg";
 export const Carousel = () => {
   return (
-    <CCarousel controls indicators interval={3000} className="mb-5">
+    <CCarousel
+      controls
+      indicators
+      interval={3000}
+      className="mb-5 home-carousel"
+      style={{ position: "relative", zIndex: 2 }}
+    >
       <CCarouselItem className="h-50">
         <CImage
           className="d-block w-100"
@@ -19,7 +25,12 @@ export const Carousel = () => {
           style={{ height: "450px", objectFit: "cover" }}
         />
         <CCarouselCaption className="d-none d-md-block">
-          <h5></h5>
+          <h1 style={{
+            position: "absolute",
+            bottom: "130px"
+          }}>
+          Centre de Recherche Intégrées en Education Relative à l'environnement
+        </h1>
           <p>Une immersion unique dans la nature</p>
         </CCarouselCaption>
       </CCarouselItem>
@@ -31,7 +42,12 @@ export const Carousel = () => {
           style={{ height: "450px", objectFit: "cover" }}
         />
         <CCarouselCaption className="d-none d-md-block">
-          <h5></h5>
+          <h1 style={{
+            position: "absolute",
+            bottom: "130px"
+          }}>
+          Centre de Recherche Intégrées en Education Relative à l'environnement
+        </h1>
           <p>Une immersion unique dans la nature</p>
         </CCarouselCaption>
       </CCarouselItem>
@@ -43,7 +59,12 @@ export const Carousel = () => {
           style={{ height: "450px", objectFit: "cover" }}
         />
         <CCarouselCaption className="d-none d-md-block">
-          <h5></h5>
+          <h1 style={{
+            position: "absolute",
+            bottom: "130px"
+          }}>
+          Centre de Recherche Intégrées en Education Relative à l'environnement
+        </h1>
           <p>Une immersion unique dans la nature</p>
         </CCarouselCaption>
       </CCarouselItem>

@@ -1,4 +1,3 @@
-
 import { Contact } from "./pages/Contact";
 
 import "./css/site.css";
@@ -6,6 +5,7 @@ import "./css/site.css";
 import { Infos } from "./pages/Infos";
 import { Home } from "./pages/Home";
 import { Reservation } from "./pages/Reservation";
+import { Formulaire } from "./pages/Formulaire";
 import { NotFound } from "./pages/NotFound";
 import { ErrorBoundary, LocationProvider, Route, Router } from "preact-iso";
 import { Layout } from "./components/Layout";
@@ -20,6 +20,7 @@ export function App() {
             <Route path="/infos" component={Infos} />
             <Route path="/contact" component={Contact} />
             <Route path="/reservation" component={Reservation} />
+            <Route path="/formulaire" component={Formulaire} />
             <Route default component={NotFound} />
           </Router>
         </Layout>

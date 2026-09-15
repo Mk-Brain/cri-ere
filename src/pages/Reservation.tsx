@@ -95,7 +95,7 @@ export const Reservation = () => {
               <li>SAMEDI : De 8h-16h30</li>
             </ul>
             <div className="primary-button">
-              <a href="Formulaire.html">Reserver</a>
+              <a href="/formulaire">Reserver</a>
             </div>
           </div>
         </div>

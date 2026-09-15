@@ -5,6 +5,7 @@
 .contact-intro,
 .contact-form-section {
     text-align: center;
+    color: var(--forest-900);
 }
 
 .contact-grid {
@@ -23,14 +24,20 @@
 }
 
 .info-card {
-    border: 2px solid rgb(160, 158, 158);
+    border: 1px solid rgba(22, 61, 45, 0.15);
     width: 28%;
     min-width: 220px;
     height: 30em;
-    border-radius: 18px;
+    border-radius: 20px;
     overflow: hidden;
-    background: #fff;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    background: linear-gradient(180deg, #fffdf9 0%, #f3f1ea 100%);
+    box-shadow: 0 16px 30px rgba(40, 70, 55, 0.11), 0 8px 18px rgba(82, 116, 95, 0.08);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 36px rgba(40, 70, 55, 0.14), 0 10px 20px rgba(82, 116, 95, 0.1);
 }
 
 .info-card-media,
@@ -49,8 +56,8 @@
 }
 
 .contact-form-section {
-    border-top: 5px solid rgb(150, 150, 149);
-    background-color: rgb(230, 230, 227);
+    border-top: 5px solid rgba(40, 90, 63, 0.35);
+    background: linear-gradient(180deg, rgba(223, 238, 224, 0.9), rgba(242, 238, 228, 0.96));
     padding: 2rem 0;
 }
 
@@ -84,8 +91,15 @@
     color: rgb(255, 255, 255);
     font-weight: bold;
     font-size: 1.25rem;
-    background-color: #0d3d2b;
+    background: linear-gradient(135deg, var(--forest-900), var(--forest-700), var(--forest-500));
     cursor: pointer;
+    box-shadow: 0 18px 30px rgba(24, 66, 49, 0.28), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 34px rgba(24, 66, 49, 0.32), inset 0 1px 0 rgba(255,255,255,0.22);
 }
 
 .contact-form-intro {

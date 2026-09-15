@@ -5,7 +5,6 @@ import At1 from "../assets/images/atelier1.jpg";
 import At2 from "../assets/images/at2.jpg";
 import At3 from "../assets/images/at3.jpg";
 import { Carousel } from "../components/Carroussel";
-import { PageHero } from "../components/PageHero";
 import { SectionIntro } from "../components/SectionIntro";
 import { ExperienceCard } from "../components/ExperienceCard";
 
@@ -39,7 +38,6 @@ export const Home = () => {
 
   return (
     <>
-      <PageHero title="Reservez votre visite au Centre ecologique" image="" />
       <Carousel />
 
       <section className="experience-section">
@@ -91,7 +89,7 @@ export const Home = () => {
               <li>SAMEDI : De 8h-16h30</li>
             </ul>
             <div className="primary-button">
-              <a href="Formulaire.html">Reserver</a>
+              <a href="/formulaire">Reserver</a>
             </div>
           </div>
         </div>

@@ -23,56 +23,52 @@ const socialLinks = [
 
 export const Footer = () => {
   return (
-    <div className="footer-shell">
-      <footer className="footer">
-        <h1>
-          Centre de Recherche Intégrées en Education Relative à l'environnement
-        </h1>
-
-        <div className="footer-grid">
-          <div className="footer-column footer-brand">
+    <div className="footer-box-shell">
+      <div className="footer-box">
+        <div className="footer-box-grid">
+          <div className="footer-box-column footer-box-brand">
             <img
               src={Logo}
               alt="CRI-ERE logo emblem representing the organization"
-              className="footer-logo"
+              className="footer-box-logo"
             />
             <h3>CRI-ERE</h3>
           </div>
 
-          <div className="footer-column">
+          <div className="footer-box-column">
             <h3>Liens rapides</h3>
-            <ul className="footer-links">
+            <ul className="footer-box-links">
               {footerLinks.map((link) => (
-                <li key={link.href} className="footer-link-item">
+                <li key={link.href} className="footer-box-link-item">
                   <a href={link.href}>{link.label}</a>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="footer-column">
+          <div className="footer-box-column">
             <h3>Contacts</h3>
-            <ul className="footer-links">
+            <ul className="footer-box-links">
               {contactLinks.map((link) => (
-                <li key={link.label} className="footer-link-item">
+                <li key={link.label} className="footer-box-link-item">
                   <a href={link.href}>{link.label}</a>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="footer-column">
+          <div className="footer-box-column">
             <h3>Suivez notre université</h3>
-            <ul className="footer-links">
+            <ul className="footer-box-links">
               {socialLinks.map((link) => (
-                <li key={link.label} className="footer-link-item">
+                <li key={link.label} className="footer-box-link-item">
                   <a href={link.href}>{link.label}</a>
                 </li>
               ))}
             </ul>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 };
