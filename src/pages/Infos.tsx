@@ -2,38 +2,18 @@ import "../css/a_propos.css";
 import Image1 from "../assets/images/image-upac-amour-paix1.jpg";
 import Image2 from "../assets/images/image-paroi-en-bouteille-H.jpg";
 
+import { StoryBlock } from "../components/StoryBlock";
+
 export const Infos = () => {
   return (
     <>
-      <div class="entete">
-        <nav class="navbar">
-          <div class="navbar-logo">CRI-ERE</div>
-          <ul style="z-index: 100;" class="navbar-links" id="navbarLinks">
-            <li>
-              <a href="acceuil.html">Accueil</a>
-            </li>
-            <li>
-              <a href="A_propos.html">À propos</a>
-            </li>
-            <li>
-              <a href="reservation.html">Reservation</a>
-            </li>
-            <li>
-              <a href="contact.html">Contact</a>
-            </li>
-          </ul>
-          <div class="navbar-toggle" id="navbarToggle">
-            &#9776;
-          </div>
-        </nav>
-      </div>
-
-      <div class="entete_anim">
+      <div className="story-header">
         <h1>CHOISSISSEZ VOTRE EXPERIENCE</h1>
         <h3> Plusieurs option pour une meilleur aventutre</h3>
       </div>
-      <div class="debut">
-        <h4 class="titre">HISTORIQUE</h4>
+
+      <div className="history-section">
+        <h4 className="section-title">HISTORIQUE</h4>
         <p>
           Depuit l'an 2018, l' Université Protestante d'Afrique centrale (UPAC)
           a mis sur pied un programme des conférences inter facultaires sur le
@@ -46,7 +26,7 @@ export const Infos = () => {
         </p>
         <br />
 
-        <h4 class="titre">Presentation</h4>
+        <h4 className="section-title">Presentation</h4>
         <p>
           Dans ses activités, le CRI-ERE oeuvre avec les milieux d'éducation
           formelle et d'apprentissage informel. Parce que l'éducation doit
@@ -57,11 +37,9 @@ export const Infos = () => {
           refléchire aux différentes possibilités et ainsi agir ensemble.
         </p>
       </div>
-      <div className="bloc">
-        <h4 class="titre">Notre mission</h4>
-        <img src={Image1} alt="image_du_guide_2" class="image" />
+
+      <StoryBlock title="Notre mission" image={Image1} alt="image_du_guide_2">
         <p>
-          {" "}
           La mission du Centre est développer, conformement à la politique de
           l'universit&, la recherche-creation où l'action simpose à travers les
           axes stratégiques prioritaires: ¤ Religion, Culture, Environnement et
@@ -76,28 +54,25 @@ export const Infos = () => {
           ¤ Hygiène, Culture, Santé et Environnement <br />
           ¤ Technologie, Ecologie, et développement <br />
         </p>
-        <br />
-      </div>
-      <div className="bloc">
-        <h4 className="titre">ESPACE VERT</h4>
-        <img src={Image2} alt="image_du_guide_3" className="image" />
+      </StoryBlock>
+
+      <StoryBlock title="ESPACE VERT" image={Image2} alt="image_du_guide_3">
         <p>
           venez decouvrir nos espaces verts , ideale pour vous liberez les idees
           tout en profitant de la vue splandide! Ne manquez pas cette chance de
           vous epanouir
         </p>
-        <br />
-      </div>
+      </StoryBlock>
+
       <a href="#boutton">
         <abbr title="Remontez au debut de la page !">
-          <button class="bouton">
+          <button className="back-to-top">
             &#9650;
             <br />
             BACK UP
           </button>
         </abbr>
       </a>
-
     </>
   );
 };
