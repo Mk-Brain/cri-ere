@@ -1,0 +1,23 @@
+# Secrets et fichiers d'environnement
+.env
+.env.*
+!.env.example
+
+# Environnement et caches Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Outils et fichiers locaux
+.git/
+.gitignore
+.vscode/
+.history/
+
+# Artefacts de build
+build/
+dist/
+*.log

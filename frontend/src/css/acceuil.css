@@ -83,28 +83,34 @@
 }
 
 .hero-title {
-    font-size: 40px;
+    font-size: clamp(1.35rem, 1.9vw, 2.2rem);
+    line-height: 1.2;
+    margin: 0;
     margin-bottom: 2%;
-    font-family: Georgia, "Times New Roman", serif;
-    color: #f5f9f4;
-    text-shadow: 0 4px 18px rgba(5, 35, 21, 0.8), 0 3px 10px rgba(0, 0, 0, 0.7);
-    -webkit-text-stroke: 1px rgba(14, 78, 42, 0.9);
-    animation: hero-scale 3s ease 1s 1 normal none;
+    font-family: Georgia, "Times New Roman", Times, serif;
+    color: #f5f1e8;
+    text-align: center;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.45);
     letter-spacing: 0.03em;
-}
-
-@keyframes hero-scale {
-    0% { transform: scale(2, 2); }
-    50% { transform: scale(0.5, 0.5); }
-    100% { transform: scale(1, 1); }
+    background: rgba(12, 29, 22, 0.44);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 0.8rem 1rem;
+    backdrop-filter: blur(3px);
+    max-width: 80%;
 }
 
 .hero-subtitle {
-    font-size: 30px;
+    font-size: clamp(1.1rem, 1.5vw, 1.8rem);
     margin: 0;
-    color: aliceblue;
+    color: #edf8f0;
     margin-bottom: 2%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: rgba(12, 29, 22, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.5rem 1rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.45);
 }
 /*RESPONSIVE*/
 @media screen and (max-width:1080px){
@@ -124,12 +130,12 @@
     }
 
     .hero-title {
-        font-size: 70px;
+        font-size: clamp(1.35rem, 3.6vw, 2.2rem);
     }
 
     .hero-subtitle {
-        font-size: 50px;
-        margin-top: 10%;
+        font-size: 1rem;
+        margin-top: 0;
         margin-bottom: 10%;
     }
 }
@@ -151,13 +157,13 @@
     }
 
     .hero-title {
-        font-size: 40px;
+        font-size: clamp(1.2rem, 6vw, 1.8rem);
         margin-bottom: 5%;
     }
 
     .hero-subtitle {
-        font-size: 25px;
-        margin-top: 25%;
+        font-size: 0.9rem;
+        margin-top: 0;
         margin-bottom: 10%;
     }
 }

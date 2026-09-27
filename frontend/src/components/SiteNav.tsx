@@ -1,9 +1,11 @@
+import { useLocation } from "preact-iso";
 import { useState } from "preact/hooks";
 
 import Logo from "../assets/images/logo4.png";
 
 export const SiteNav = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { path } = useLocation();
 
   const links = [
     { href: "/", label: "Accueil" },
@@ -12,16 +14,21 @@ export const SiteNav = () => {
     { href: "/contact", label: "Contact" },
   ];
 
+  const isActive = (href: string) => path === href;
+
   return (
     <header className="site-header">
       <nav className="site-nav" aria-label="Navigation principale">
         <div className="site-nav-group site-nav-left">
-          <a href="/" className="site-nav-link">
-            Accueil
-          </a>
-          <a href="/infos" className="site-nav-link">
-            À propos
-          </a>
+          {links.slice(0, 2).map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className={`site-nav-link ${isActive(link.href) ? "active" : ""}`}
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
 
         <div className="site-brand">
@@ -34,12 +41,15 @@ export const SiteNav = () => {
         </div>
 
         <div className="site-nav-group site-nav-right">
-          <a href="/reservation" className="site-nav-link">
-            Réservation
-          </a>
-          <a href="/contact" className="site-nav-link">
-            Contact
-          </a>
+          {links.slice(2).map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className={`site-nav-link ${isActive(link.href) ? "active" : ""}`}
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
       </nav>
       <div className="mobile-header-row">
@@ -71,7 +81,11 @@ export const SiteNav = () => {
         aria-label="Navigation mobile"
       >
         {links.map((link) => (
-          <a key={link.href} href={link.href} className="site-nav-mobile-link">
+          <a
+            key={link.href}
+            href={link.href}
+            className={`site-nav-mobile-link ${isActive(link.href) ? "active" : ""}`}
+          >
             {link.label}
           </a>
         ))}
