@@ -1,8 +1,50 @@
 services:
-  backend:
+  frontend-cri-ere:
+    container_name: frontend-cri-ere
+    image: frontend-cri-ere:v1
     build:
-      context: .                  # Contexte = la racine du projet
-      dockerfile: Backend_cri_ere/docker/Dockerfile # Chemin du Dockerfile
+      context: ./frontend
+      dockerfile: docker/Dockerfile
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      backend-cri-ere:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5173/", "--max-time", "2"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    
+    dashboard-cri-ere:
+      container_name: dashboard-cri-ere
+      image: dashboard-cri-ere:v1
+      build:
+        context: ./dashboard
+        dockerfile: docker/Dockerfile
+      env_file:
+        - ./dashboard/.env
+      depends_on:
+        backend-cri-ere:
+          condition: service_healthy
+      ports:
+        - "${FRONTEND_PORT:-5174}:5174"
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://127.0.0.1:5174/", "--max-time", "2"]
+        interval: 10s
+        timeout: 3s
+        retries: 5
+        start_period: 10s
+    
+  backend-cri-ere: 
+    container_name: backend-cri-ere
+    image: backend-cri-ere:v1
+    build:
+      context: ./Backend_cri_ere
+      dockerfile: docker/Dockerfile
     environment:
       PROJECT_NAME: ${PROJECT_NAME:-Backend CRI ERE}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:5173"]}
@@ -16,6 +58,12 @@ services:
         condition: service_healthy
     ports:
       - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
   db:
     image: mysql:8.4
     restart: unless-stopped

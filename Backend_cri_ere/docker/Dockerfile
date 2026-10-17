@@ -1,19 +1,30 @@
 
 FROM python:3.12-slim
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /uvx /bin/
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && uv sync --no-install-project --no-dev --locked \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY pyproject.toml uv.lock ./
 # Installer les dependances avant le code pour profiter du cache Docker.
-COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-install-project
 
 COPY . .
-RUN uv sync --locked
+
+RUN useradd -m -u 1000 appuser \
+    && mkdir -p /data/uploads \
+    && chown -R appuser:appuser /app /data/uploads
+
+RUN chmod +x start.sh
+
+USER appuser
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "backend_cri_ere.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["bash", "start.sh"]
 

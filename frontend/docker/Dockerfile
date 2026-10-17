@@ -1,19 +1,35 @@
+# =========================================
+# Stage: Development (Vite React.js App)
+# =========================================
+ARG NODE_VERSION=24.14.0-alpine
 
-FROM python:3.12-slim
+FROM node:${NODE_VERSION} AS dev
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+RUN apk add --no-cache curl
 
+# Set working directory inside the container
 WORKDIR /app
 
-COPY pyproject.toml uv.lock ./
-# Installer les dependances avant le code pour profiter du cache Docker.
-COPY pyproject.toml uv.lock ./
-RUN uv sync --locked --no-install-project
+# Copy package files
+COPY package*.json ./
 
+# Install dependencies
+RUN npm install
+
+# Copy rest of the source code
 COPY . .
-RUN uv sync --locked
 
-EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "backend_cri_ere.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Ensure the "node" user owns the application files
+RUN chown -R node:node /app
 
+
+# Switch to the built-in non-root "node" user
+USER node
+
+
+# Expose Vite dev server port
+EXPOSE 5174
+
+# Run Vite in dev mode, accessible outside the container
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

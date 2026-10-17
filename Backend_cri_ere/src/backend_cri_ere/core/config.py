@@ -9,8 +9,6 @@ ENV_FILE_PATH = BASE_DIR / ".env"
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Backend CRI ERE"
     
-    # 1. Gestion des origines CORS (Listes)
-    # Pydantic parse automatiquement les chaînes JSON ou séparées par des virgules
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
         "http://localhost:5173",
     ]

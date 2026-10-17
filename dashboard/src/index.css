@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-forest-dark: #0F4D3D;
+  --color-brand-forest-medium: #14674D;
+  --color-brand-sage: #759A83;
+  --color-brand-sage-light: #E8F0EA;
+  --color-brand-earth: #8B5E3C;
+  --color-brand-sand: #D2B48C;
+  --color-brand-cream: #F9FBF9;
+
+  --font-sans: 'Lato', 'Open Sans', sans-serif;
+}
