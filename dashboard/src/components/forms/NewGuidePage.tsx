@@ -1,7 +1,7 @@
 import EntityForm, {
   type EntityFormField,
   type EntityFormValues,
-} from "../../components/EntityForm";
+} from "../EntityForm";
 import { createOne } from "../../services/guideService";
 
 const fields: EntityFormField[] = [

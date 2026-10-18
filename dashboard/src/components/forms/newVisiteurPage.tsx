@@ -1,21 +1,23 @@
 import EntityForm, {
   type EntityFormField,
   type EntityFormValues,
-} from "../../components/EntityForm";
-import { createOne } from "../../services/parcoursService";
+} from "../EntityForm";
+import { createOne } from "../../services/visiteurService";
 
 const fields: EntityFormField[] = [
   { name: "nom", label: "Nom", required: true },
   { name: "prenom", label: "Prénom", required: true },
   { name: "email", label: "Email", required: true },
-  { name: "telephone", label: "Téléphone", required: true },
+  { name: "telephone", label: "Téléphone", type: "tel", required: true },
 ];
 
 export default function NewVisiteurPage() {
   const handleSubmit = async (values: EntityFormValues) => {
     await createOne({
       nom: values.nom.trim(),
-      description: values.description.trim() || undefined,
+      prenom: values.prenom.trim() || undefined,
+      email: values.email.trim(),
+      telephone: values.telephone.trim(),
     });
   };
 

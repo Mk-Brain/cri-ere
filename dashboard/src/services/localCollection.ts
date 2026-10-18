@@ -173,6 +173,8 @@ export function createLocalCollection<T extends object, K extends keyof T>(
 
     async deleteOne(id: number): Promise<void> {
       rows = rows.filter((row) => Number(row[idField]) !== id);
+      console.log(`Deleted record with id ${id} from local collection`);
+      console.log("Current rows:", rows);
     },
   };
 }

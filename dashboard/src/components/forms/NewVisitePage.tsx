@@ -15,13 +15,13 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { type Dayjs } from "dayjs";
-import FormPage from "../../components/FormPage";
+import FormPage from "../FormPage";
 import type {
   FormFieldValue,
   OptionItem,
   VisitFormState,
   VisitFormValues,
-} from "../../types/VisitsType";
+} from "../../types/VisitFormTypes";
 
 interface ApiParcours {
   id_parcours: number;
@@ -194,7 +194,7 @@ export default function NewVisitePage() {
       title="Créer une visite"
       parentTitle="Visites"
       backPath="/visites"
-      submitLabel="Enregistrement à connecter à l’API"
+      submitLabel="Enregistrer"
       onSubmit={handleSubmit}
       onReset={handleReset}
       error={optionsError}

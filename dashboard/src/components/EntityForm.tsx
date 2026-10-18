@@ -20,6 +20,8 @@ interface EntityFormProps {
   backPath: string;
   fields: EntityFormField[];
   initialValues: EntityFormValues;
+  submitLabel?: string;
+  loadInitialValues?: () => Promise<EntityFormValues>;
   onSubmit: (values: EntityFormValues) => Promise<void>;
 }
 
@@ -29,22 +31,55 @@ export default function EntityForm({
   backPath,
   fields,
   initialValues,
+  submitLabel = "Enregistrer",
+  loadInitialValues,
   onSubmit,
 }: EntityFormProps) {
   const navigate = useNavigate();
   const [values, setValues] = React.useState(initialValues);
-  const [error, setError] = React.useState<string | null>(null);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [loadedFor, setLoadedFor] = React.useState<typeof loadInitialValues>();
+  const isLoading = !!loadInitialValues && loadedFor !== loadInitialValues;
+
+  React.useEffect(() => {
+    if (!loadInitialValues) return;
+
+    let isCurrent = true;
+
+    void loadInitialValues()
+      .then((loadedValues) => {
+        if (isCurrent) {
+          setValues(loadedValues);
+          setLoadError(null);
+        }
+      })
+      .catch((loadError: unknown) => {
+        if (isCurrent) {
+          setLoadError(
+            loadError instanceof Error ? loadError.message : String(loadError),
+          );
+        }
+      })
+      .finally(() => {
+        if (isCurrent) setLoadedFor(() => loadInitialValues);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [loadInitialValues]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError(null);
+    setSubmitError(null);
     setIsSubmitting(true);
     try {
       await onSubmit(values);
       navigate(backPath);
     } catch (submitError) {
-      setError(
+      setSubmitError(
         submitError instanceof Error
           ? submitError.message
           : String(submitError),
@@ -59,10 +94,11 @@ export default function EntityForm({
       title={title}
       parentTitle={parentTitle}
       backPath={backPath}
-      submitLabel="Enregistrer"
+      submitLabel={submitLabel}
       onSubmit={handleSubmit}
-      error={error}
+      error={loadError ?? submitError}
       isSubmitting={isSubmitting}
+      submitDisabled={isLoading || !!loadError}
     >
       {fields.map((field) => (
         <TextField
