@@ -6,8 +6,19 @@ if TYPE_CHECKING:
     from backend_cri_ere.models.reponseModel import Reponse
 
 
-class Administrateur(SQLModel, table=True):
-    __tablename__ = "administrateur"
+class AdminBase(SQLModel):
+    nom: str
+    prenom: str | None = None
+    email: str = Field(unique=True, nullable=False)
+
+class AdminPublic(AdminBase):
+    id_administrateur : int
+
+class AdminCreate(AdminBase):
+    password: str
+
+class Administrateur(AdminBase, table=True):
+    __tablename__: str = "administrateurs"
 
     id_administrateur: int | None = Field(
         default=None,
@@ -21,5 +32,5 @@ class Administrateur(SQLModel, table=True):
 
     # Relations
     reponses: list["Reponse"] = Relationship(
-        back_populates="administrateur"
+        back_populates="administrateurs"
     )

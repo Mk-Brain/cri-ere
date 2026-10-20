@@ -1,7 +1,7 @@
 from sqlmodel import Relationship, SQLModel, Field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from backend_cri_ere.models.reponseModel import Reponse
@@ -13,8 +13,25 @@ class StatutMessage(str, Enum):
     LU = "LU"
     REPONDU = "REPONDU"
 
-class VisitorMessage(SQLModel, table=True):
-    __tablename__ = "message"
+
+class VisitorMessageBase(SQLModel):
+    contenu: str
+    date_envoi: datetime
+    statut: StatutMessage = Field(
+            default=StatutMessage.NON_LU
+        )
+
+
+class VisitorMessagePublic(VisitorMessageBase):
+    id_message: int
+    visiteur: Any
+    reponse: Any
+
+class VisitorMessageCreate(VisitorMessageBase):
+    id_visiteur: int    
+
+class VisitorMessage(VisitorMessageBase, table=True):
+    __tablename__: str = "messages"
 
     id_message: int | None = Field(
         default=None,
@@ -29,7 +46,7 @@ class VisitorMessage(SQLModel, table=True):
         default=StatutMessage.NON_LU
     )
     id_visiteur: int = Field(
-        foreign_key="visiteur.id_visiteur"
+        foreign_key="visiteurs.id_visiteur"
     )
     # Relations
     visiteur: "Visiteur" = Relationship(
@@ -37,5 +54,5 @@ class VisitorMessage(SQLModel, table=True):
     )
 
     reponse: "Reponse | None" = Relationship(
-        back_populates="message"
+        back_populates="messages"
     )

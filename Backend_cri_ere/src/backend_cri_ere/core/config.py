@@ -3,8 +3,8 @@ from typing import List
 from pydantic import AnyHttpUrl, MySQLDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-ENV_FILE_PATH = BASE_DIR / ".env"
+
+ENV_FILE_PATH = env_file = Path(__file__).resolve().parents[3] / ".env"
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Backend CRI ERE"

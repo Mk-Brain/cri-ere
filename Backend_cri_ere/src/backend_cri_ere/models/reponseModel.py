@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlmodel import Relationship, SQLModel, Field
 
@@ -7,8 +7,22 @@ if TYPE_CHECKING:
     from backend_cri_ere.models.adminModel import Administrateur
     from backend_cri_ere.models.messageModel import VisitorMessage
 
-class Reponse(SQLModel, table=True):
-    __tablename__ = "reponse"
+
+class ReponseBase(SQLModel):
+    contenu: str
+    date_envoi: datetime
+
+class ReponsePublic(ReponseBase):
+    id_reponse: int
+    message: Any
+    administrateur: Any
+
+class ReponseCreate(ReponseBase):
+    id_message: int
+    id_administrateur: int
+
+class Reponse(ReponseBase, table=True):
+    __tablename__: str = "reponses"
 
     id_reponse: int | None = Field(
         default=None,
@@ -20,17 +34,17 @@ class Reponse(SQLModel, table=True):
     date_envoi: datetime
 
     id_message: int = Field(
-    foreign_key="message.id_message",
+    foreign_key="messages.id_message",
     unique=True
 )
 
     id_administrateur: int = Field(
-        foreign_key="administrateur.id_administrateur"
+        foreign_key="administrateurs.id_administrateur"
     )
 
     # Relations
     message: "VisitorMessage" = Relationship(
-        back_populates="reponse"
+        back_populates="reponses"
     )
 
     administrateur: "Administrateur" = Relationship(

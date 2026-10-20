@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Annotated
 
 from fastapi import Depends
@@ -10,10 +11,14 @@ db_url = settings.SQLALCHEMY_DATABASE_URI
 engine = create_engine(db_url, pool_pre_ping=True)
 
 
-def get_session():
-    with Session(engine) as session:
+@contextmanager
+def db_session():
+    session = Session(engine,)
+    try:
         yield session
-
-
-SessionDep = Annotated[Session, Depends(get_session)]
-
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
