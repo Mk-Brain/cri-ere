@@ -23,13 +23,12 @@ import { useSignIn } from "../../hooks/useSignIn";
 import { Alert, CircularProgress, InputAdornment } from "@mui/material";
 import { useNavigate } from "react-router";
 
-
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   alignSelf: "center",
   width: "100%",
-  minHeight:"80%",
+  minHeight: "80%",
   overflow: "auto",
   padding: theme.spacing(4),
   gap: theme.spacing(2),
@@ -74,34 +73,28 @@ export default function SignIn() {
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  const [email, setEmail] = React.useState<string>("");
-  const [password, setPassword] = React.useState<string>("");
   const navigate = useNavigate();
   const [remember, setRemember] = React.useState(false);
   const [visibility, setVisibility] = React.useState(false);
-  const [connectionMode, setConnectionMode] = React.useState<"password" | "google" | null>(null);
 
-  const { isLoading, errorCode, errorMessage, user } = useSignIn(
-    email,
-    password,
-    remember,
-    connectionMode
-  );
+  const {
+    isLoading,
+    errorCode,
+    errorMessage,
+    user,
+    connectionMode,
+    signIn,
+  } = useSignIn();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (emailError || passwordError) {
-      return;
-    }
+    if (!validateInputs()) return;
+
     const data = new FormData(event.currentTarget);
-    setEmail(data.get("email") as string);
-    setPassword(data.get("password") as string);
-    setConnectionMode("password");
-    if (remember) localStorage.setItem("email", data.get("email") as string);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+    const email = data.get("email") as string;
+    const password = data.get("password") as string;
+    if (remember) localStorage.setItem("email", email);
+    void signIn("password", email, password, remember);
   };
 
   const validateInputs = () => {
@@ -130,8 +123,6 @@ export default function SignIn() {
 
     return isValid;
   };
-
-
 
   React.useEffect(() => {
     if (user) {
@@ -214,7 +205,10 @@ export default function SignIn() {
                       <InputAdornment
                         position="end"
                         onClick={() => setVisibility(!visibility)}
-                        sx={{ cursor: "pointer", backgroundColor:"transparent"}}
+                        sx={{
+                          cursor: "pointer",
+                          backgroundColor: "transparent",
+                        }}
                       >
                         {visibility ? (
                           <VisibilityIcon />
@@ -244,15 +238,24 @@ export default function SignIn() {
               type="submit"
               fullWidth
               variant="contained"
-              onClick={validateInputs}
               disabled={isLoading}
             >
-              {isLoading && connectionMode === "password" ? <CircularProgress /> : "Se connecter"}
+              {isLoading && connectionMode === "password" ? (
+                <CircularProgress />
+              ) : (
+                "Se connecter"
+              )}
             </Button>
             <Link
               component="button"
               type="button"
-              onClick={() => {}}
+              disabled={isLoading}
+              onClick={() => {
+                const emailInput = document.getElementById(
+                  "email",
+                ) as HTMLInputElement;
+                void signIn("resetPassword", emailInput.value, "", remember);
+              }}
               variant="body2"
               sx={{ alignSelf: "center" }}
             >
@@ -264,11 +267,22 @@ export default function SignIn() {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => setConnectionMode("google")}
+              onClick={() => {
+                void signIn(
+                  "google",
+                  "",
+                  "",
+                  remember,
+                );
+              }}
               startIcon={<GoogleIcon />}
-              disabled={isLoading }
+              disabled={isLoading}
             >
-              {isLoading && connectionMode === "google" ? <CircularProgress /> : "Se connecter avec google"}
+              {isLoading && connectionMode === "google" ? (
+                <CircularProgress />
+              ) : (
+                "Se connecter avec google"
+              )}
             </Button>
           </Box>
         </Card>

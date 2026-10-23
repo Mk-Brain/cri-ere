@@ -3,93 +3,94 @@ import {
   browserSessionPersistence,
   getAuth,
   GoogleAuthProvider,
+  sendPasswordResetEmail,
   setPersistence,
   signInWithEmailAndPassword,
   signInWithPopup,
   type User,
 } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { app } from "../services/firebaseAuth";
 
-export function useSignIn(
-  email: string,
-  password: string,
-  remember: boolean,
-  connectionMode: "password" | "google" | null,
-) {
+type ConnectionMode = "password" | "google" | "resetPassword";
+
+export function useSignIn() {
   const [isLoading, setIsLoading] = useState(false);
-  const [errorCode, setErrorCode] = useState<number | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const persistenceType = remember
-    ? browserLocalPersistence
-    : browserSessionPersistence;
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
+    null,
+  );
+  const requestInProgress = useRef(false);
   const auth = getAuth(app);
+  auth.useDeviceLanguage();
 
-  useEffect(() => {
-    const singInWithPassword = () => {
-    if (email && password)
-      return signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          // Signed in
-          const user = userCredential.user;
-          setUser(user);
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          setErrorCode(errorCode);
-          setErrorMessage(errorMessage);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-  }
-    const singInWithGoogle = () => {
-    auth.useDeviceLanguage();
-    const provider = new GoogleAuthProvider();
-    if (localStorage.getItem("email")) {
-      provider.setCustomParameters({
-        login_hint: localStorage.getItem("email") as string,
-      });
-    }
-    return signInWithPopup(auth, provider)
-      .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        //const credential = GoogleAuthProvider.credentialFromResult(result);
-        //const token = credential?.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        setUser(user);
-        // ...
-      })
-      .catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        setErrorCode(errorCode);
-        setErrorMessage(errorMessage);
-        // The email of the user's account used.
-        //const email = error.customData.email;
-        // The AuthCredential type that was used.
-        //const credential = GoogleAuthProvider.credentialFromError(error);
-        // ...
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }
-    if (connectionMode) {
-      setTimeout(() => {
-        setIsLoading(true);
-      }, 0);
-      setPersistence(auth, persistenceType).then(() => {
-        return connectionMode === "password"
-          ? singInWithPassword()
-          : singInWithGoogle();
-      });
-    }
-  }, [auth, connectionMode, email, password, persistenceType]);
+  async function signIn(
+    mode: ConnectionMode,
+    email: string,
+    password: string,
+    remember: boolean,
+  ) {
+    if (requestInProgress.current) return;
 
-  return { isLoading, errorCode, errorMessage, user };
+    requestInProgress.current = true;
+    setConnectionMode(mode);
+    setIsLoading(true);
+    setErrorCode(null);
+    setErrorMessage(null);
+
+    try {
+      await setPersistence(
+        auth,
+        remember ? browserLocalPersistence : browserSessionPersistence,
+      );
+
+      if (mode === "password") {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password,
+        );
+        setUser(userCredential.user);
+      } else if (mode === "google") {
+        const provider = new GoogleAuthProvider();
+        const savedEmail = localStorage.getItem("email");
+        if (savedEmail) {
+          provider.setCustomParameters({ login_hint: savedEmail });
+        }
+        const result = await signInWithPopup(auth, provider);
+        setUser(result.user);
+      } else {
+        await sendPasswordResetEmail(auth, email);
+        alert(
+          `Un e-mail de réinitialisation de mot de passe vous a été envoyé à l'adresse ${email}.`,
+        );
+      }
+    } catch (error: unknown) {
+      const code =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        typeof error.code === "string"
+          ? error.code
+          : null;
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Une erreur inattendue est survenue.";
+      setErrorCode(code ?? "unknown");
+      setErrorMessage(message);
+      console.error("Erreur lors de la connexion :", code, message);
+      if (mode === "resetPassword") {
+        alert("Une erreur est survenue : " + message);
+      }
+    } finally {
+      requestInProgress.current = false;
+      setIsLoading(false);
+      setConnectionMode(null);
+    }
+  }
+
+  return { isLoading, errorCode, errorMessage, user, connectionMode, signIn };
 }
