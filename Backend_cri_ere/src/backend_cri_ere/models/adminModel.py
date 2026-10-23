@@ -12,15 +12,15 @@ class AdminBase(SQLModel):
     email: str = Field(unique=True, nullable=False)
 
 class AdminPublic(AdminBase):
-    id_administrateur : int
+    id_administrateur : str
 
 class AdminCreate(AdminBase):
-    password: str
+    pass
 
 class Administrateur(AdminBase, table=True):
     __tablename__: str = "administrateurs"
 
-    id_administrateur: int | None = Field(
+    id_administrateur: str | None = Field(
         default=None,
         primary_key=True
     )
@@ -28,7 +28,7 @@ class Administrateur(AdminBase, table=True):
     nom: str
     prenom: str | None = None
     email: str = Field(unique=True, nullable=False)
-    password: str
+
 
     # Relations
     reponses: list["Reponse"] = Relationship(

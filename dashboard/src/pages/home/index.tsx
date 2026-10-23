@@ -3,15 +3,35 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSidebar from "../../components/DashboardSideBar";
 import SitemarkIcon from "../../assets/logo4.png";
 import styled from "@emotion/styled";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { app } from "../../services/firebaseAuth";
 
 const Logo = styled.img``;
 
 export default function Home() {
+const auth = getAuth(app);
+const navigate = useNavigate()
+React.useEffect(()=>{
+  onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // User is signed in, see docs for a list of available properties
+    // https://firebase.google.com/docs/reference/js/auth.user
+    const uid = user.uid;
+    console.log("User is signed in with UID:", uid);
+    navigate("/visites")
+    // ...
+  } else {
+    // User is signed out
+    navigate("/login")
+  }
+});
+},[auth, navigate])
+
   const theme = useTheme();
 
   const [isDesktopNavigationExpanded, setIsDesktopNavigationExpanded] =
@@ -47,8 +67,9 @@ export default function Home() {
     [setIsNavigationExpanded],
   );
 
-  const [layoutContainer, setLayoutContainer] =
-    React.useState<HTMLDivElement | null>(null);
+  const [layoutContainer, setLayoutContainer] =React.useState<HTMLDivElement | null>(null);
+
+  
 
   return (
     <Box
@@ -63,7 +84,7 @@ export default function Home() {
     >
       <DashboardHeader
         logo={<Logo src={SitemarkIcon} alt="logo" />}
-        title=""
+        title="CRI-ERE"
         menuOpen={isNavigationExpanded}
         onToggleMenu={handleToggleHeaderMenu}
       />

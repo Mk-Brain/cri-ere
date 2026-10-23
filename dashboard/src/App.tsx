@@ -24,7 +24,10 @@ import EditCreneauPage from "./components/edits/EditCreneau";
 import EditVisiteurPage from "./components/edits/EditVisiteur";
 import EditVisitePage from "./components/edits/EditVisite";
 
+
+
 function App() {
+
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -33,7 +36,6 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />}>
-              <Route path="/login" element={<Login />} />
               <Route path="/visites" element={<Visites />} />
               <Route path="/visites/new" element={<NewVisitePage />} />
               <Route path="/visites/edit/:id" element={<EditVisitePage />} />
@@ -54,6 +56,7 @@ function App() {
               <Route path="/parcours/new" element={<NewParcoursPage />} />
               <Route path="/parcours/edit/:id" element={<EditParcoursPage />} />
             </Route>
+            <Route path="/login" element={<Login />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </BrowserRouter>

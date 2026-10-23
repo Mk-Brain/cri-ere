@@ -19,7 +19,7 @@ class ReponsePublic(ReponseBase):
 
 class ReponseCreate(ReponseBase):
     id_message: int
-    id_administrateur: int
+    id_administrateur: str
 
 class Reponse(ReponseBase, table=True):
     __tablename__: str = "reponses"
@@ -38,7 +38,7 @@ class Reponse(ReponseBase, table=True):
     unique=True
 )
 
-    id_administrateur: int = Field(
+    id_administrateur: str = Field(
         foreign_key="administrateurs.id_administrateur"
     )
 
