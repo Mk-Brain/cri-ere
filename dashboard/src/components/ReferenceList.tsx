@@ -25,6 +25,8 @@ interface ReferenceListProps<T extends object> {
   title: string;
   createLabel: string;
   createPath: string;
+  refreshToken?: number;
+  actionError?: string | null;
   idField: keyof T;
   columns: GridColDef[];
   getMany: (
@@ -36,6 +38,8 @@ export default function ReferenceList<T extends object>({
   title,
   createLabel,
   createPath,
+  refreshToken,
+  actionError,
   idField,
   columns,
   getMany,
@@ -94,7 +98,7 @@ export default function ReferenceList<T extends object>({
   React.useEffect(() => {
     const timeoutId = setTimeout(() => void loadData(), 100);
     return () => clearTimeout(timeoutId);
-  }, [loadData]);
+  }, [loadData, refreshToken]);
 
   const handlePaginationChange = React.useCallback(
     (model: GridPaginationModel) => {
@@ -171,6 +175,11 @@ export default function ReferenceList<T extends object>({
       }
     >
       <Box sx={{ flex: 1, width: "100%" }}>
+        {actionError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {actionError}
+          </Alert>
+        )}
         {error ? (
           <Alert severity="error">{error.message}</Alert>
         ) : (

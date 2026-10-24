@@ -8,29 +8,27 @@ import DashboardHeader from "../../components/DashboardHeader";
 import DashboardSidebar from "../../components/DashboardSideBar";
 import SitemarkIcon from "../../assets/logo4.png";
 import styled from "@emotion/styled";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { app } from "../../services/firebaseAuth";
+import { useAuth } from "../../hooks/useAuthContext";
+import { CircularProgress } from "@mui/material";
 
 const Logo = styled.img``;
 
 export default function Home() {
-const auth = getAuth(app);
+const {user, loading} = useAuth()
 const navigate = useNavigate()
 React.useEffect(()=>{
-  onAuthStateChanged(auth, (user) => {
+  
   if (user) {
-    // User is signed in, see docs for a list of available properties
-    // https://firebase.google.com/docs/reference/js/auth.user
     const uid = user.uid;
     console.log("User is signed in with UID:", uid);
-    navigate("/visites")
+    //navigate("/visites")
     // ...
   } else {
     // User is signed out
     navigate("/login")
   }
-});
-},[auth, navigate])
+
+},[navigate, user])
 
   const theme = useTheme();
 
@@ -69,7 +67,15 @@ React.useEffect(()=>{
 
   const [layoutContainer, setLayoutContainer] =React.useState<HTMLDivElement | null>(null);
 
-  
+  if(loading)
+    return <Box sx={{
+      width:"100%",
+      height:"100%",
+      alignItems:"center",
+      justifyContent:"center"
+    }}>
+      <CircularProgress/>
+    </Box>
 
   return (
     <Box

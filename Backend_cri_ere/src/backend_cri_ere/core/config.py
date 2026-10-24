@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     DB_USER: str = "root"
     DB_PASSWORD: str
     DB_NAME: str
+    GOOGLE_APPLICATION_CREDENTIALS: str 
 
     # 3. Propriété calculée pour fabriquer l'URL de BDD SQLAlchemy dynamiquement
     @computed_field

@@ -15,30 +15,20 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { type Dayjs } from "dayjs";
+import { useNavigate } from "react-router";
 import FormPage from "../FormPage";
+import { StatutVisite } from "../../types/DomainTypes";
+import { createOne as createVisit } from "../../services/visitService";
+import { createOne as createVisiteur } from "../../services/visiteurService";
+import { getAll as getParcours } from "../../services/parcoursService";
+import { getAll as getCreneaux } from "../../services/creneauService";
+import { getAll as getGuides } from "../../services/guideService";
 import type {
   FormFieldValue,
   OptionItem,
   VisitFormState,
   VisitFormValues,
 } from "../../types/VisitFormTypes";
-
-interface ApiParcours {
-  id_parcours: number;
-  nom: string;
-}
-
-interface ApiCreneau {
-  id_creneau: number;
-  heure_debut: string;
-  heure_fin: string;
-}
-
-interface ApiGuide {
-  id_guide: number;
-  nom: string;
-  prenom?: string;
-}
 
 const INITIAL_FORM_STATE: VisitFormState = {
   values: {
@@ -56,6 +46,7 @@ const INITIAL_FORM_STATE: VisitFormState = {
 };
 
 export default function NewVisitePage() {
+  const navigate = useNavigate();
   const [formState, setFormState] = React.useState(INITIAL_FORM_STATE);
   const [parcoursOptions, setParcoursOptions] = React.useState<OptionItem[]>(
     [],
@@ -66,33 +57,18 @@ export default function NewVisitePage() {
   const [guidesOptions, setGuidesOptions] = React.useState<OptionItem[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = React.useState(true);
   const [optionsError, setOptionsError] = React.useState<string | null>(null);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     const fetchOptions = async () => {
       setIsLoadingOptions(true);
       setOptionsError(null);
       try {
-        const [parcoursResponse, creneauxResponse, guidesResponse] =
-          await Promise.all([
-            fetch("/api/parcours"),
-            fetch("/api/creneaux"),
-            fetch("/api/guides"),
-          ]);
-
-        if (
-          !parcoursResponse.ok ||
-          !creneauxResponse.ok ||
-          !guidesResponse.ok
-        ) {
-          throw new Error(
-            "Erreur lors de la récupération des données de référence.",
-          );
-        }
-
         const [parcours, creneaux, guides] = await Promise.all([
-          parcoursResponse.json() as Promise<ApiParcours[]>,
-          creneauxResponse.json() as Promise<ApiCreneau[]>,
-          guidesResponse.json() as Promise<ApiGuide[]>,
+          getParcours(),
+          getCreneaux(),
+          getGuides(),
         ]);
 
         setParcoursOptions(
@@ -142,13 +118,98 @@ export default function NewVisitePage() {
 
   const handleReset = React.useCallback(() => {
     setFormState(INITIAL_FORM_STATE);
+    setSubmitError(null);
   }, []);
 
   const handleSubmit = React.useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      setSubmitError(null);
+      const { values } = formState;
+      const {
+        date_visite,
+        nombre_personnes,
+        id_parcours,
+        id_creneau,
+        id_guide,
+        nom,
+        prenom,
+        email,
+        telephone,
+      } = values;
+      const errors: VisitFormState["errors"] = {};
+
+      if (!date_visite?.isValid()) errors.date_visite = "Date obligatoire.";
+      if (typeof nombre_personnes !== "number" || nombre_personnes < 1) {
+        errors.nombre_personnes = "Saisis au moins une personne.";
+      }
+      if (typeof id_parcours !== "number") {
+        errors.id_parcours = "Sélectionne un parcours.";
+      }
+      if (typeof id_creneau !== "number") {
+        errors.id_creneau = "Sélectionne un créneau.";
+      }
+      if (typeof id_guide !== "number") {
+        errors.id_guide = "Sélectionne un guide.";
+      }
+      if (!nom?.trim()) errors.nom = "Le nom est obligatoire.";
+      if (!email?.trim()) errors.email = "L’adresse email est obligatoire.";
+      if (!telephone?.trim()) {
+        errors.telephone = "Le téléphone est obligatoire.";
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setFormState((current) => ({ ...current, errors }));
+        return;
+      }
+
+      if (
+        !date_visite ||
+        typeof nombre_personnes !== "number" ||
+        typeof id_parcours !== "number" ||
+        typeof id_creneau !== "number" ||
+        typeof id_guide !== "number" ||
+        !nom ||
+        !email ||
+        !telephone
+      ) {
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const visiteur = await createVisiteur({
+          nom: nom.trim(),
+          prenom: prenom?.trim() || undefined,
+          email: email.trim(),
+          telephone: telephone.trim(),
+        });
+
+        if (visiteur.id_visiteur == null) {
+          throw new Error("Impossible d’obtenir l’identifiant du visiteur.");
+        }
+
+        await createVisit({
+          date_visite: date_visite.format("YYYY-MM-DD"),
+          statut: StatutVisite.EN_ATTENTE,
+          nombre_personnes,
+          id_visiteur: visiteur.id_visiteur,
+          id_parcours,
+          id_creneau,
+          id_guide,
+        });
+        navigate("/visites");
+      } catch (error) {
+        setSubmitError(
+          error instanceof Error
+            ? error.message
+            : "Impossible de créer la visite.",
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [],
+    [formState, navigate],
   );
 
   const handleTextChange = React.useCallback(
@@ -197,8 +258,9 @@ export default function NewVisitePage() {
       submitLabel="Enregistrer"
       onSubmit={handleSubmit}
       onReset={handleReset}
-      error={optionsError}
-      submitDisabled
+      error={submitError ?? optionsError}
+      isSubmitting={isSubmitting}
+      submitDisabled={isLoadingOptions || !!optionsError}
       noValidate
     >
       {isLoadingOptions ? (

@@ -1,3 +1,4 @@
+import * as React from "react";
 import { GridActionsCellItem, type GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -6,7 +7,10 @@ import { deleteOne, getMany } from "../../services/visitService";
 import ReferenceList from "../../components/ReferenceList";
 import { useNavigate, type NavigateFunction } from "react-router";
 
-function defineColumns(n: NavigateFunction) {
+function defineColumns(
+  navigate: NavigateFunction,
+  onDelete: (id: number) => Promise<void>,
+) {
   const columns: GridColDef[] = [
     { field: "id_visite", headerName: "ID", width: 80 },
     { field: "date_visite", headerName: "Date", width: 140 },
@@ -46,8 +50,8 @@ function defineColumns(n: NavigateFunction) {
         <GridActionsCellItem
           key="delete-visit"
           icon={<DeleteIcon />}
-          label="Supprimer (bientôt disponible)"
-          onClick={()=>{deleteOne(row.id_visite)}}
+          label="Supprimer"
+          onClick={() => void onDelete(row.id_visite)}
         />,
       ],
     },
@@ -58,14 +62,32 @@ function defineColumns(n: NavigateFunction) {
 
 export const Visites = () => {
   const navigate = useNavigate();
+  const [refreshToken, setRefreshToken] = React.useState(0);
+  const [actionError, setActionError] = React.useState<string | null>(null);
+
+  const handleDelete = React.useCallback(async (id: number) => {
+    setActionError(null);
+    try {
+      await deleteOne(id);
+      setRefreshToken((current) => current + 1);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de supprimer cette visite.",
+      );
+    }
+  }, []);
 
   return (
     <ReferenceList<Visite>
       title="Visites"
       createLabel="Créer une visite"
       createPath="/visites/new"
+      refreshToken={refreshToken}
+      actionError={actionError}
       idField="id_visite"
-      columns={defineColumns(navigate)}
+      columns={defineColumns(navigate, handleDelete)}
       getMany={getMany}
     />
   );

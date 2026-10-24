@@ -23,6 +23,7 @@ import EditGuidePage from "./components/edits/EditGuide";
 import EditCreneauPage from "./components/edits/EditCreneau";
 import EditVisiteurPage from "./components/edits/EditVisiteur";
 import EditVisitePage from "./components/edits/EditVisite";
+import { AuthProvider } from "./services/AuthContext";
 
 
 
@@ -31,7 +32,8 @@ function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-        <CssBaseline />{" "}
+        <AuthProvider>
+          <CssBaseline />{" "}
         {/* Normalise le CSS et applique le background.default */}
         <BrowserRouter>
           <Routes>
@@ -60,6 +62,7 @@ function App() {
             <Route path="*" element={<Home />} />
           </Routes>
         </BrowserRouter>
+        </AuthProvider>
       </ThemeProvider>
     </>
   );
