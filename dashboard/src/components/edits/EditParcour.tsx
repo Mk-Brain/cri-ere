@@ -16,10 +16,14 @@ export default function EditParcoursPage() {
   const parcoursId = Number(id);
 
   const loadInitialValues = React.useCallback(async () => {
+    console.log("loading");
+    
     if (!Number.isInteger(parcoursId) || parcoursId <= 0) {
       throw new Error("Identifiant de parcours invalide.");
     }
     const parcours = await getOne(parcoursId);
+    console.log(parcours);
+
     return {
       nom: parcours.nom,
       description: parcours.description ?? "",

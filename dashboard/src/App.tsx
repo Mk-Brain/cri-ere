@@ -23,45 +23,45 @@ import EditGuidePage from "./components/edits/EditGuide";
 import EditCreneauPage from "./components/edits/EditCreneau";
 import EditVisiteurPage from "./components/edits/EditVisiteur";
 import EditVisitePage from "./components/edits/EditVisite";
-import { AuthProvider } from "./services/AuthContext";
-
-
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
-
   return (
     <>
       <ThemeProvider theme={theme}>
         <AuthProvider>
           <CssBaseline />{" "}
-        {/* Normalise le CSS et applique le background.default */}
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />}>
-              <Route path="/visites" element={<Visites />} />
-              <Route path="/visites/new" element={<NewVisitePage />} />
-              <Route path="/visites/edit/:id" element={<EditVisitePage />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/visiteurs" element={<Visiteurs />} />
-              <Route path="/visiteurs/new" element={<NewVisiteurPage />} />
-              <Route
-                path="/visiteurs/edit/:id"
-                element={<EditVisiteurPage />}
-              />
-              <Route path="/crenaux" element={<Creneaux />} />
-              <Route path="/crenaux/new" element={<NewCreneauPage />} />
-              <Route path="/crenaux/edit/:id" element={<EditCreneauPage />} />
-              <Route path="/guides" element={<Guides />} />
-              <Route path="/guides/new" element={<NewGuidePage />} />
-              <Route path="/guides/edit/:id" element={<EditGuidePage />} />
-              <Route path="/parcours" element={<Parcours />} />
-              <Route path="/parcours/new" element={<NewParcoursPage />} />
-              <Route path="/parcours/edit/:id" element={<EditParcoursPage />} />
-            </Route>
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </BrowserRouter>
+          {/* Normalise le CSS et applique le background.default */}
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />}>
+                <Route path="/visites" element={<Visites />} />
+                <Route path="/visites/new" element={<NewVisitePage />} />
+                <Route path="/visites/edit/:id" element={<EditVisitePage />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/visiteurs" element={<Visiteurs />} />
+                <Route path="/visiteurs/new" element={<NewVisiteurPage />} />
+                <Route
+                  path="/visiteurs/edit/:id"
+                  element={<EditVisiteurPage />}
+                />
+                <Route path="/crenaux" element={<Creneaux />} />
+                <Route path="/crenaux/new" element={<NewCreneauPage />} />
+                <Route path="/crenaux/edit/:id" element={<EditCreneauPage />} />
+                <Route path="/guides" element={<Guides />} />
+                <Route path="/guides/new" element={<NewGuidePage />} />
+                <Route path="/guides/edit/:id" element={<EditGuidePage />} />
+                <Route path="/parcours" element={<Parcours />} />
+                <Route path="/parcours/new" element={<NewParcoursPage />} />
+                <Route
+                  path="/parcours/edit/:id"
+                  element={<EditParcoursPage />}
+                />
+              </Route>
+              <Route path="/login" element={<Login />} />
+              <Route path="*" element={<Home />} />
+            </Routes>
+          </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>
     </>

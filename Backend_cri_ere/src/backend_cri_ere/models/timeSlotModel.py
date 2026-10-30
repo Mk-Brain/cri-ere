@@ -17,6 +17,9 @@ class CreneauHorairePublic(CreneauHoraireBase):
 class CreneauHoraireCreate(CreneauHoraireBase):
     pass
 
+class CreneauHoraireUpdate(CreneauHoraireBase):
+    pass
+
 class CreneauHoraire(CreneauHoraireBase, table=True):
     __tablename__: str = "creneaux"
 
@@ -30,5 +33,5 @@ class CreneauHoraire(CreneauHoraireBase, table=True):
 
     # Relations
     visites: list["Visite"] = Relationship(
-        back_populates="creneaux"
+        back_populates="creneau"
     )

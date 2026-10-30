@@ -44,7 +44,7 @@ class Reponse(ReponseBase, table=True):
 
     # Relations
     message: "VisitorMessage" = Relationship(
-        back_populates="reponses"
+        back_populates="reponse"
     )
 
     administrateur: "Administrateur" = Relationship(

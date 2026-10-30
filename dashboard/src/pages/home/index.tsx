@@ -19,8 +19,9 @@ const navigate = useNavigate()
 React.useEffect(()=>{
   
   if (user) {
-    const uid = user.uid;
-    console.log("User is signed in with UID:", uid);
+    user.getIdToken().then((value)=>{
+      console.log("User is signed in with UID:", value);
+    });
     //navigate("/visites")
     // ...
   } else {

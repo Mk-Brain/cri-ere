@@ -84,6 +84,8 @@ export default function ReferenceList<T extends object>({
     setIsLoading(true);
     try {
       const result = await getMany({ paginationModel, sortModel, filterModel });
+      console.log(result);
+      
       setRows(result.items);
       setRowCount(result.itemCount);
     } catch (loadError) {

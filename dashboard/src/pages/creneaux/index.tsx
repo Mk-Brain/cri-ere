@@ -2,11 +2,15 @@ import { GridActionsCellItem, type GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import type { CreneauHoraire } from "../../types/DomainTypes";
-import { getMany } from "../../services/creneauService";
+import { deleteOne, getMany } from "../../services/creneauService";
 import ReferenceList from "../../components/ReferenceList";
 import { useNavigate, type NavigateFunction } from "react-router";
+import React from "react";
 
-function createColumns(navigate: NavigateFunction): GridColDef[] {
+function createColumns(
+  navigate: NavigateFunction,
+  onDelete: (id: number) => Promise<void>,
+): GridColDef[] {
   return [
     { field: "id_creneau", headerName: "ID", width: 90 },
     { field: "heure_debut", headerName: "Heure de début", minWidth: 180 },
@@ -27,7 +31,7 @@ function createColumns(navigate: NavigateFunction): GridColDef[] {
           key="delete-creneau"
           icon={<DeleteIcon />}
           label="Supprimer (bientôt disponible)"
-          disabled
+          onClick={() => void onDelete(row.id_creneau)}
         />,
       ],
     },
@@ -36,14 +40,32 @@ function createColumns(navigate: NavigateFunction): GridColDef[] {
 
 export const Creneaux = () => {
   const navigate = useNavigate();
+  const [refreshToken, setRefreshToken] = React.useState(0);
+  const [actionError, setActionError] = React.useState<string | null>(null);
+
+  const handleDelete = React.useCallback(async (id: number) => {
+    setActionError(null);
+    try {
+      await deleteOne(id);
+      setRefreshToken((current) => current + 1);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de supprimer cette visite.",
+      );
+    }
+  }, []);
   return (
     <ReferenceList<CreneauHoraire>
       title="Créneaux"
       createLabel="Créer un créneau"
       createPath="/crenaux/new"
       idField="id_creneau"
-      columns={createColumns(navigate)}
+      columns={createColumns(navigate, handleDelete)}
       getMany={getMany}
+      refreshToken={refreshToken}
+      actionError={actionError}
     />
   );
 };

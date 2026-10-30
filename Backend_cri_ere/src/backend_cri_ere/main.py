@@ -2,10 +2,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from .core.config import settings
-from backend_cri_ere.api.visite import router as visite_router
-from backend_cri_ere.api.parcours import router as parcours_router
-from backend_cri_ere.api.guides import router as guides_router
-from backend_cri_ere.api.creneau import router as creneaux_router
+from backend_cri_ere.api.private.visite import router as visite_router
+from backend_cri_ere.api.private.parcours import router as parcours_router
+from backend_cri_ere.api.private.guides import router as guides_router
+from backend_cri_ere.api.private.creneau import router as creneaux_router
+from backend_cri_ere.api.private.message import router as messages_router
+from backend_cri_ere.api.private.visiteur import router as visiteur_router
+
+import backend_cri_ere.services.firebase
+import backend_cri_ere.models
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -21,7 +26,8 @@ app.include_router(
 app.include_router(
     creneaux_router,
 )
-
+app.include_router(messages_router)
+app.include_router(visiteur_router)
 # Injection de la liste CORS configurée
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -39,11 +45,10 @@ def read_root():
         "message": f"Bienvenu sur l'API {settings.PROJECT_NAME} !",
     }
 
+
 @app.get("/health")
 def check_health():
-    return {
-        "message" : "OK"
-    }
+    return {"message": "OK"}
 
 
 def start():

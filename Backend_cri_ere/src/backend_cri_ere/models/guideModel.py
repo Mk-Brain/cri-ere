@@ -18,6 +18,9 @@ class GuidePublic(GuideBase):
 class GuideCreate(GuideBase):
     pass
 
+class GuideUpdate(GuideBase):
+    pass
+
 class Guide(GuideBase, table=True):
     __tablename__: str = "guides"
 
@@ -32,5 +35,5 @@ class Guide(GuideBase, table=True):
 
     # Relations
     visites: list["Visite"] = Relationship(
-        back_populates="guides"
+        back_populates="guide"
     )

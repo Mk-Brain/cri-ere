@@ -32,5 +32,5 @@ class Administrateur(AdminBase, table=True):
 
     # Relations
     reponses: list["Reponse"] = Relationship(
-        back_populates="administrateurs"
+        back_populates="administrateur"
     )

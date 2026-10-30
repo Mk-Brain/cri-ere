@@ -20,6 +20,9 @@ class VisiteurPublic(VisiteurBase):
 class VisiteurCreate(VisiteurBase):
     pass
 
+class VisiteurUpdate(VisiteurBase):
+    pass
+
 class Visiteur(VisiteurBase, table=True):
     __tablename__: str = "visiteurs"
 
@@ -35,9 +38,9 @@ class Visiteur(VisiteurBase, table=True):
 
     # Relations
     visites: list["Visite"] = Relationship(
-        back_populates="visiteurs"
+        back_populates="visiteur"
     )
 
     messages: list["VisitorMessage"] = Relationship(
-        back_populates="visiteurs"
+        back_populates="visiteur"
     )

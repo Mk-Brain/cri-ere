@@ -16,6 +16,9 @@ class ParcoursPublic(ParcoursBase):
 class ParcoursCreate(ParcoursBase):
     pass
 
+class ParcoursUpdate(ParcoursBase):
+   pass
+
 class Parcours(ParcoursBase, table=True):
     __tablename__: str = "parcours"
 

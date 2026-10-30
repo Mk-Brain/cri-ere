@@ -1,24 +1,50 @@
-import { type Visiteur } from "../types/DomainTypes";
-import { createLocalCollection } from "./localCollection";
+import type { CollectionQuery, CollectionPage } from "../types/CollectionTypes";
+import type { Visiteur } from "../types/DomainTypes";
+import { APIClient } from "./apiClient";
 
-const collection = createLocalCollection<Visiteur, "id_visiteur">(
-  [
-    {
-      id_visiteur: 1,
-      nom: "morand",
-      prenom: "morand",
-      email: "5morand@exemple.com",
-      telephone: "145 542 145",
-    },
-  ],
-  "id_visiteur",
-);
 
-export const getVisiteStore = collection.getAll;
-export const setVisiteStore = collection.setAll;
-export const getMany = collection.getMany;
-export const getAll = collection.getAll;
-export const getOne = collection.getOne;
-export const createOne = collection.createOne;
-export const updateOne = collection.updateOne;
-export const deleteOne = collection.deleteOne;
+export async function getMany(
+  query: CollectionQuery,
+): Promise<CollectionPage<Visiteur>> {
+  const params = new URLSearchParams({
+    page: String(query.paginationModel.page),
+    pageSize: String(query.paginationModel.pageSize),
+    sort: JSON.stringify(query.sortModel),
+    filter: JSON.stringify(query.filterModel),
+  });
+
+  return APIClient.request<CollectionPage<Visiteur>>(`/visiteurs/?${params.toString()}`);
+}
+
+export async function getAll(): Promise<Visiteur[]> {
+  const params = new URLSearchParams({ page: "0", pageSize: "1000" });
+  const result = await APIClient.request<CollectionPage<Visiteur>>(
+    `/visiteurs/?${params.toString()}`,
+  );
+  return result.items;
+}
+
+export function getOne(id: number): Promise<Visiteur> {
+  return APIClient.request<Visiteur>(`/visiteurs/${id}`);
+}
+
+export function createOne(data: Omit<Visiteur, "id_visiteur">): Promise<Visiteur> {
+  return APIClient.request<Visiteur>("/visiteurs/new", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateOne(
+  id: number,
+  data: Partial<Omit<Visiteur, "id_visiteur">>,
+): Promise<Visiteur> {
+  return APIClient.request<Visiteur>(`/visiteurs/edit/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteOne(id: number): Promise<void> {
+  await APIClient.request<void>(`/visiteurs/delete/${id}`, { method: "DELETE" });
+}

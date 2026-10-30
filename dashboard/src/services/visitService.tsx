@@ -1,45 +1,51 @@
-import { StatutVisite, type Visite } from "../types/DomainTypes";
-import { createLocalCollection } from "./localCollection";
+import type { CollectionQuery, CollectionPage } from "../types/CollectionTypes";
+import type { Visite } from "../types/DomainTypes";
+import { APIClient } from "./apiClient";
 
-const collection = createLocalCollection<Visite, "id_visite">(
-  [
-    {
-      id_visite: 1,
-      date_visite: "2023-06-01",
-      statut: StatutVisite.EFFECTUEE,
-      nombre_personnes: 5,
-      id_visiteur: 1,
-      id_parcours: 1,
-      id_creneau: 1,
-      id_guide: 1,
-    },
-    {
-      id_visite: 2,
-      date_visite: "2023-06-02",
-      statut: StatutVisite.EFFECTUEE,
-      nombre_personnes: 3,
-      id_visiteur: 1,
-      id_parcours: 1,
-      id_creneau: 1,
-      id_guide: 1,
-    },
-    {
-      id_visite: 3,
-      date_visite: "2023-06-03",
-      statut: StatutVisite.NON_EFFECTUEE,
-      nombre_personnes: 5,
-      id_visiteur: 1,
-      id_parcours: 1,
-      id_creneau: 1,
-      id_guide: 1,
-    },
-  ],
-  "id_visite",
-);
+export async function getMany(
+  query: CollectionQuery,
+): Promise<CollectionPage<Visite>> {
+  const params = new URLSearchParams({
+    page: String(query.paginationModel.page),
+    pageSize: String(query.paginationModel.pageSize),
+    sort: JSON.stringify(query.sortModel),
+    filter: JSON.stringify(query.filterModel),
+  });
 
-export const getMany = collection.getMany;
-export const getAll = collection.getAll;
-export const getOne = collection.getOne;
-export const createOne = collection.createOne;
-export const updateOne = collection.updateOne;
-export const deleteOne = collection.deleteOne;
+  return APIClient.request<CollectionPage<Visite>>(
+    `/visites/?${params.toString()}`,
+  );
+}
+
+export async function getAll(): Promise<Visite[]> {
+  const params = new URLSearchParams({ page: "0", pageSize: "1000" });
+  const result = await APIClient.request<CollectionPage<Visite>>(
+    `/visites/?${params.toString()}`,
+  );
+  return result.items;
+}
+
+export function getOne(id: number): Promise<Visite> {
+  return APIClient.request<Visite>(`/visites/${id}`);
+}
+
+export function createOne(data: Omit<Visite, "id_visite">): Promise<Visite> {
+  return APIClient.request<Visite>("/visites/new", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateOne(
+  id: number,
+  data: Partial<Omit<Visite, "id_visite">>,
+): Promise<Visite> {
+  return APIClient.request<Visite>(`/visites/edit/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteOne(id: number): Promise<void> {
+  await APIClient.request<void>(`/visites/delete/${id}`, { method: "DELETE" });
+}

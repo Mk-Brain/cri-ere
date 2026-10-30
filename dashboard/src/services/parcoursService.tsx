@@ -1,20 +1,52 @@
+import type { CollectionQuery, CollectionPage } from "../types/CollectionTypes";
 import type { Parcours } from "../types/DomainTypes";
-import { createLocalCollection } from "./localCollection";
+import { APIClient } from "./apiClient";
 
-const collection = createLocalCollection<Parcours, "id_parcours">(
-  [
-    {
-      id_parcours: 1,
-      nom: "Parcours de démonstration",
-      description: "Données locales temporaires, en attente de l’API.",
-    },
-  ],
-  "id_parcours",
-);
 
-export const getMany = collection.getMany;
-export const getAll = collection.getAll;
-export const getOne = collection.getOne;
-export const createOne = collection.createOne;
-export const updateOne = collection.updateOne;
-export const deleteOne = collection.deleteOne;
+
+
+export async function getMany(
+  query: CollectionQuery,
+): Promise<CollectionPage<Parcours>> {
+  const params = new URLSearchParams({
+    page: String(query.paginationModel.page),
+    pageSize: String(query.paginationModel.pageSize),
+    sort: JSON.stringify(query.sortModel),
+    filter: JSON.stringify(query.filterModel),
+  });
+
+  return APIClient.request<CollectionPage<Parcours>>(`/parcours/?${params.toString()}`);
+}
+
+export async function getAll(): Promise<Parcours[]> {
+  const params = new URLSearchParams({ page: "0", pageSize: "1000" });
+  const result = await APIClient.request<CollectionPage<Parcours>>(
+    `/parcours/?${params.toString()}`,
+  );
+  return result.items;
+}
+
+export function getOne(id: number): Promise<Parcours> {
+  return APIClient.request<Parcours>(`/parcours/${id}`);
+}
+
+export function createOne(data: Omit<Parcours, "id_parcours">): Promise<Parcours> {
+  return APIClient.request<Parcours>("/parcours/new", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateOne(
+  id: number,
+  data: Partial<Omit<Parcours, "id_parcours">>,
+): Promise<Parcours> {
+  return APIClient.request<Parcours>(`/parcours/edit/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteOne(id: number): Promise<void> {
+  await APIClient.request<void>(`/parcours/delete/${id}`, { method: "DELETE" });
+}

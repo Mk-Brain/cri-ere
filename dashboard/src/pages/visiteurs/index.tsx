@@ -3,11 +3,15 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SendIcon from "@mui/icons-material/Send";
 import { type Visiteur } from "../../types/DomainTypes";
-import { getMany } from "../../services/visiteurService";
+import { deleteOne, getMany } from "../../services/visiteurService";
 import ReferenceList from "../../components/ReferenceList";
 import { useNavigate, type NavigateFunction } from "react-router";
+import React from "react";
 
-function createColumns(navigate: NavigateFunction): GridColDef[] {
+function createColumns(
+  navigate: NavigateFunction,
+  onDelete: (id: number) => Promise<void>,
+): GridColDef[] {
   return [
     { field: "id_visiteur", headerName: "ID", width: 80 },
     { field: "nom", headerName: "Nom", width: 140 },
@@ -36,7 +40,7 @@ function createColumns(navigate: NavigateFunction): GridColDef[] {
           key="delete-visit"
           icon={<DeleteIcon />}
           label="Supprimer (bientôt disponible)"
-          disabled
+          onClick={() => void onDelete(row.id_visiteur)}
         />,
       ],
     },
@@ -45,14 +49,32 @@ function createColumns(navigate: NavigateFunction): GridColDef[] {
 
 export const Visiteurs = () => {
   const navigate = useNavigate();
+  const [refreshToken, setRefreshToken] = React.useState(0);
+  const [actionError, setActionError] = React.useState<string | null>(null);
+
+  const handleDelete = React.useCallback(async (id: number) => {
+    setActionError(null);
+    try {
+      await deleteOne(id);
+      setRefreshToken((current) => current + 1);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de supprimer cette visite.",
+      );
+    }
+  }, []);
   return (
     <ReferenceList<Visiteur>
       title="Visiteurs"
       createLabel="Créer un visiteur"
       createPath="/visiteurs/new"
       idField="id_visiteur"
-      columns={createColumns(navigate)}
+      columns={createColumns(navigate, handleDelete)}
       getMany={getMany}
+      refreshToken={refreshToken}
+      actionError={actionError}
     />
   );
 };

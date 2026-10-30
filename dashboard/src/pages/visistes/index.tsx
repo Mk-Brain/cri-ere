@@ -2,7 +2,11 @@ import * as React from "react";
 import { GridActionsCellItem, type GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { StatutVisite, type Visite } from "../../types/DomainTypes";
+import {
+  StatutVisite,
+  type Visite,
+  
+} from "../../types/DomainTypes";
 import { deleteOne, getMany } from "../../services/visitService";
 import ReferenceList from "../../components/ReferenceList";
 import { useNavigate, type NavigateFunction } from "react-router";
@@ -13,11 +17,18 @@ function defineColumns(
 ) {
   const columns: GridColDef[] = [
     { field: "id_visite", headerName: "ID", width: 80 },
-    { field: "date_visite", headerName: "Date", width: 140 },
-    { field: "id_guide", headerName: "ID Guide", width: 110 },
-    { field: "id_visiteur", headerName: "ID Visiteur", width: 120 },
-    { field: "id_parcours", headerName: "ID Parcours", width: 120 },
-    { field: "id_creneau", headerName: "ID Créneau", width: 120 },
+    {
+      field: "date_visite",
+      headerName: "Date",
+      width: 130,
+      renderCell: ({ value }) => {
+        const date = new Date(`${String(value)}T00:00:00`);
+        return Number.isNaN(date.getTime())
+          ? String(value ?? "")
+          : new Intl.DateTimeFormat("fr-FR").format(date);
+      },
+    },
+
     {
       field: "statut",
       headerName: "Statut",
@@ -33,7 +44,53 @@ function defineColumns(
       field: "nombre_personnes",
       headerName: "Nombre de personnes",
       type: "number",
-      width: 180,
+      minWidth: 100,
+    },
+    {
+      field: "id_guide",
+      headerName: "Guide",
+      minWidth: 160,
+      renderCell: ({ row }) => {
+        const guide = row.guide
+        return guide
+          ? `${guide.prenom ? `${guide.prenom} ` : ""}${guide.nom}`
+          : `#${row.id_guide}`;
+      },
+    },
+    {
+      field: "id_visiteur",
+      headerName: "Visiteur",
+      width: 160,
+      renderCell: ({ row }) => {
+        const visiteur = row.visiteur
+
+        return visiteur
+          ? `${visiteur.prenom ? `${visiteur.prenom} ` : ""}${visiteur.nom}`
+          : `#${row.id_visiteur}`;
+      },
+    },
+    {
+      field: "id_parcours",
+      headerName: "Parcours",
+      width: 200,
+      renderCell: ({ row }) => {
+        const parcours = row.parcours
+
+        return parcours
+          ? `${parcours.nom ? `${parcours.nom} ` : ""}`
+          : `#${row.id_parcours}`;
+      },
+    },
+    {
+      field: "id_creneau",
+      headerName: "Créneau",
+      width: 160,
+      renderCell: ({ row }) => {
+        const creneau = row.creneau
+        return creneau
+          ? `${creneau.heure_debut} - ${creneau.heure_fin}`
+          : `#${row.id_creneau}`;
+      },
     },
     {
       field: "actions",
@@ -45,7 +102,7 @@ function defineColumns(
           key="edit-visit"
           icon={<EditIcon />}
           label="Modifier"
-          onClick={() => n(`/visites/edit/${row.id_visite}`)}
+          onClick={() => navigate(`/visites/edit/${row.id_visite}`)}
         />,
         <GridActionsCellItem
           key="delete-visit"
@@ -64,6 +121,7 @@ export const Visites = () => {
   const navigate = useNavigate();
   const [refreshToken, setRefreshToken] = React.useState(0);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  
 
   const handleDelete = React.useCallback(async (id: number) => {
     setActionError(null);

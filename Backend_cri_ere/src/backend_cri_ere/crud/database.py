@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import create_engine, Session
 from backend_cri_ere.core.config import settings
+import backend_cri_ere.models  # noqa: F401
 
 
 db_url = settings.SQLALCHEMY_DATABASE_URI

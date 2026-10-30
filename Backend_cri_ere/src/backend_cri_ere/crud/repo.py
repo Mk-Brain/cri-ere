@@ -34,3 +34,6 @@ class Repository(Generic[ModelType]):
     def list(self, session: Session) -> Sequence[ModelType]:
         req = select(self.model)
         return session.exec(req).all()
+
+
+    

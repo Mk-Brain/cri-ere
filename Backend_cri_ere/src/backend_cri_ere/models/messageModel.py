@@ -1,12 +1,14 @@
+
 from sqlmodel import Relationship, SQLModel, Field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from backend_cri_ere.models.reponseModel import Reponse
     from backend_cri_ere.models.visitorModel import Visiteur
-
+    from backend_cri_ere.models.reponseModel import ReponsePublic
+    from backend_cri_ere.models.visitorModel import VisiteurPublic
 
 class StatutMessage(str, Enum):
     NON_LU = "NON_LU"
@@ -18,17 +20,21 @@ class VisitorMessageBase(SQLModel):
     contenu: str
     date_envoi: datetime
     statut: StatutMessage = Field(
-            default=StatutMessage.NON_LU
-        )
+        default=StatutMessage.NON_LU
+    )
 
 
 class VisitorMessagePublic(VisitorMessageBase):
     id_message: int
-    visiteur: Any
-    reponse: Any
+    visiteur: "VisiteurPublic"
+    reponse: "ReponsePublic"
 
 class VisitorMessageCreate(VisitorMessageBase):
-    id_visiteur: int    
+    id_visiteur: int
+
+class VisitorMessageUpdate(VisitorMessageBase):
+    pass
+    
 
 class VisitorMessage(VisitorMessageBase, table=True):
     __tablename__: str = "messages"
@@ -40,7 +46,9 @@ class VisitorMessage(VisitorMessageBase, table=True):
 
     contenu: str
 
-    date_envoi: datetime
+    date_envoi: datetime = Field(
+        default=datetime.utcnow
+    )
 
     statut: StatutMessage = Field(
         default=StatutMessage.NON_LU
@@ -53,6 +61,7 @@ class VisitorMessage(VisitorMessageBase, table=True):
         back_populates="messages"
     )
 
-    reponse: "Reponse | None" = Relationship(
-        back_populates="messages"
+    # ✅ Correction : Optional["Reponse"] au lieu de "Reponse | None"
+    reponse: Optional["Reponse"] = Relationship(
+        back_populates="message"
     )

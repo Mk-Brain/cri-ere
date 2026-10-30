@@ -1,3 +1,7 @@
+from backend_cri_ere.models.courseModel import ParcoursPublic
+from backend_cri_ere.models.guideModel import GuidePublic
+from backend_cri_ere.models.timeSlotModel import CreneauHorairePublic
+from backend_cri_ere.models.visitorModel import VisiteurPublic
 from sqlmodel import Relationship, SQLModel, Field
 from datetime import date
 from enum import Enum
@@ -16,7 +20,7 @@ class StatutVisite(str, Enum):
     NON_EFFECTUEE = "NON_EFFECTUEE"
 
 #model de base
-class VisteBase(SQLModel):
+class VisiteBase(SQLModel):
     date_visite: date
     statut: StatutVisite = Field(
         default=StatutVisite.EN_ATTENTE
@@ -25,37 +29,43 @@ class VisteBase(SQLModel):
     
 
 #modele de visite retourner par l'api
-class VistePublic(VisteBase):
+class VisitePublic(VisiteBase):
     id_visite: int
-    visiteur: Any
-    parcour: Any
-    creneau: Any
-    guide: Any
+    id_visiteur: int
+    id_parcours: int
+    id_creneau: int
+    id_guide: int    
+    visiteur: "VisiteurPublic"
+    parcours: "ParcoursPublic"
+    creneau: "CreneauHorairePublic"
+    guide: "GuidePublic"
 
 #model de visite pour la creation d'une nouvelle visite
-class VisteCreate(VisteBase):
+class VisteCreate(VisiteBase):
     id_visiteur: int
     id_parcours: int
     id_creneau: int
     id_guide: int
 
+#model de visite pour la mise à jour d'une  visite
+class VisteUpdate(VisiteBase):
+    date_visite: date | None = None
+    statut: StatutVisite | None = None
+    nombre_personnes: int | None = None
+    id_visiteur: int | None = None
+    id_parcours: int | None = None
+    id_creneau: int | None = None
+    id_guide: int | None = None
+
 
 #model de table visites
-class Visite(SQLModel, table=True):
+class Visite(VisiteBase, table=True):
     __tablename__: str = "visites"
 
     id_visite: int | None = Field(
         default=None,
         primary_key=True
     )
-
-    date_visite: date
-
-    statut: StatutVisite = Field(
-        default=StatutVisite.EN_ATTENTE
-    )
-
-    nombre_personnes: int
 
     # Clés étrangères
     id_visiteur: int = Field(
