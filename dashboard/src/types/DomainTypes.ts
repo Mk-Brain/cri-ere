@@ -66,8 +66,10 @@ export interface VisitorMessage {
   contenu: string;
   date_envoi: string | Date;
   statut: StatutMessage;
-  id_visiteur: number;
-  visiteur?: Visiteur;
+  nom?: string | null;
+  email: string;
+  id_visiteur?: number | null;
+  visiteur?: Visiteur | null;
   reponse?: Reponse;
 }
 

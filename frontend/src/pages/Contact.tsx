@@ -7,9 +7,12 @@ import Arbuste from "../assets/images/image-arbuste.jpg";
 
 import { DetailCard } from "../components/DetailCard";
 import { PageHero } from "../components/PageHero";
+import { useState, type JSX } from "preact/compat";
+import { sendContactMessage } from "../services/reservation";
+import type { VisitorMessage } from "../types/DomainTypes";
 
-export const Contact = () => {
-  const informations = [
+
+const informations = [
     {
       title: "localisation",
       image: Portail,
@@ -58,8 +61,47 @@ export const Contact = () => {
     },
   ];
 
+export const Contact = () => {
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+    const handleSubmit = async (
+    event: JSX.TargetedEvent<HTMLFormElement, SubmitEvent>,
+  ) => {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    setSubmitError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    const messageData: VisitorMessage = {
+      nom: String(formData.get("nom") ?? "").trim(),
+      email: String(formData.get("email") ?? "").trim(),
+      contenu: String(formData.get("contenu") ?? "").trim(),
+    };
+
+    try {
+      const result = await sendContactMessage(messageData);
+      setMessage(result.message);
+      formElement.reset();
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Le message n’a pas pu être envoyé. Veuillez réessayer.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  
   return (
     <div>
+      
       <PageHero
         title="Bienvenue au Centre Ecologique"
         subtitle="Votre lien direct avec le centre ecologique"
@@ -91,18 +133,28 @@ export const Contact = () => {
         <div className="contact-form-intro">
           <p>Nous somme à votre écoute</p>
         </div>
+        {submitError && (
+            <p className="form-feedback form-feedback--error" role="alert">
+              {submitError}
+            </p>
+          )}
+          {message && (
+            <p className="form-feedback form-feedback--success" role="status">
+              {message}
+            </p>
+          )}
         <div className="contact-form-wrap">
-          <form className="contact-form" action="" method="post">
+          <form className="contact-form" onSubmit={handleSubmit}>
             <input type="text" name="nom" placeholder="Nom" />
             <input type="email" name="email" placeholder="E-mail" />
             <textarea
               rows={2}
               cols={3}
-              name="message"
+              name="contenu"
               id="message"
               placeholder="Message"
             ></textarea>
-            <button type="submit">Soumettre</button>
+            <button type="submit" disabled={isSubmitting}>Soumettre</button>
           </form>
         </div>
       </section>

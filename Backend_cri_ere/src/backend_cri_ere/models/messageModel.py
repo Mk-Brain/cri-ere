@@ -1,14 +1,14 @@
 
 from sqlmodel import Relationship, SQLModel, Field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
+
+from backend_cri_ere.models.reponseModel import ReponsePublic
+from backend_cri_ere.models.visitorModel import Visiteur, VisiteurPublic
 
 if TYPE_CHECKING:
     from backend_cri_ere.models.reponseModel import Reponse
-    from backend_cri_ere.models.visitorModel import Visiteur
-    from backend_cri_ere.models.reponseModel import ReponsePublic
-    from backend_cri_ere.models.visitorModel import VisiteurPublic
 
 class StatutMessage(str, Enum):
     NON_LU = "NON_LU"
@@ -26,11 +26,15 @@ class VisitorMessageBase(SQLModel):
 
 class VisitorMessagePublic(VisitorMessageBase):
     id_message: int
-    visiteur: "VisiteurPublic"
-    reponse: "ReponsePublic"
+    nom: str | None = None
+    email: str = Field(max_length=254)
+    visiteur: VisiteurPublic | None = None
+    reponse: ReponsePublic | None = None
 
 class VisitorMessageCreate(VisitorMessageBase):
     id_visiteur: int
+    nom: str | None = None
+    email: str | None = None
 
 class VisitorMessageUpdate(VisitorMessageBase):
     pass
@@ -47,17 +51,20 @@ class VisitorMessage(VisitorMessageBase, table=True):
     contenu: str
 
     date_envoi: datetime = Field(
-        default=datetime.utcnow
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
     )
 
     statut: StatutMessage = Field(
         default=StatutMessage.NON_LU
     )
-    id_visiteur: int = Field(
-        foreign_key="visiteurs.id_visiteur"
+    nom: str | None = Field(default=None, max_length=255)
+    email: str = Field(max_length=254)
+    id_visiteur: int | None = Field(
+        default=None,
+        foreign_key="visiteurs.id_visiteur",
     )
     # Relations
-    visiteur: "Visiteur" = Relationship(
+    visiteur: Optional[Visiteur] = Relationship(
         back_populates="messages"
     )
 

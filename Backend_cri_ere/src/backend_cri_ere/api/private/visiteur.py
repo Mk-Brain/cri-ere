@@ -137,6 +137,13 @@ def addvisiteur(
 ) -> dict[str, Any]:
     new_visiteur = Visiteur.model_validate(visiteur)
     with db_session() as session:
+        sql = select(Visiteur).where(Visiteur.email == new_visiteur.email).limit(1)
+        user = session.exec(sql)
+        if user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Un visiteur avec cet email existe déjà.",
+            )
         created_visiteur = crudOperator.create(session=session, obj_in=new_visiteur)
         return created_visiteur.model_dump()
 

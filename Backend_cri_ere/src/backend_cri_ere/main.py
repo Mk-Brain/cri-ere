@@ -8,6 +8,8 @@ from backend_cri_ere.api.private.guides import router as guides_router
 from backend_cri_ere.api.private.creneau import router as creneaux_router
 from backend_cri_ere.api.private.message import router as messages_router
 from backend_cri_ere.api.private.visiteur import router as visiteur_router
+from backend_cri_ere.api.public.contact import router as contact_router
+from backend_cri_ere.api.public.reservation import router as reservation_router
 
 import backend_cri_ere.services.firebase
 import backend_cri_ere.models
@@ -28,15 +30,20 @@ app.include_router(
 )
 app.include_router(messages_router)
 app.include_router(visiteur_router)
+app.include_router(reservation_router)
+app.include_router(contact_router)
 # Injection de la liste CORS configurée
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origins=[
+            str(origin).rstrip("/") for origin in settings.BACKEND_CORS_ORIGINS
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+print(f"BACKEND_CORS_ORIGINS: {settings.BACKEND_CORS_ORIGINS}")
 
 
 @app.get("/")

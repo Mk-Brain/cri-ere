@@ -4,6 +4,7 @@ from typing import Any
 from backend_cri_ere.crud.database import db_session
 from backend_cri_ere.crud.repo import Repository
 from backend_cri_ere.models.adminModel import Administrateur
+from backend_cri_ere.models.visitorModel import Visiteur
 from backend_cri_ere.models.messageModel import (
     VisitorMessage,
     VisitorMessageCreate,
@@ -24,6 +25,8 @@ MESSAGE_FIELDS = {
     "contenu": VisitorMessage.contenu,
     "date_envoi": VisitorMessage.date_envoi,
     "statut": VisitorMessage.statut,
+    "nom": VisitorMessage.nom,
+    "email": VisitorMessage.email,
     "id_visiteur": VisitorMessage.id_visiteur,
 }
 
@@ -130,8 +133,21 @@ def addmessage(
     message: VisitorMessageCreate,
     user: Administrateur = Depends(get_current_user),
 ) -> dict[str, Any]:
-    new_message = VisitorMessage.model_validate(message)
     with db_session() as session:
+        visiteur = session.get(Visiteur, message.id_visiteur)
+        if visiteur is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Identifiant de visiteur invalide",
+            )
+        new_message = VisitorMessage(
+            contenu=message.contenu,
+            date_envoi=message.date_envoi,
+            statut=message.statut,
+            id_visiteur=message.id_visiteur,
+            nom=message.nom or visiteur.nom,
+            email=message.email or visiteur.email,
+        )
         created = crudOperator.create(session=session, obj_in=new_message)
         return created.model_dump()
 
