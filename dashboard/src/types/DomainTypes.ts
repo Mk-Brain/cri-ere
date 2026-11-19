@@ -62,7 +62,9 @@ export interface CreneauHoraire {
 }
 
 export interface VisitorMessage {
-  id_message?: number;
+  id_message: number;
+  id_message_parent?: number | null;
+  id_administrateur?: string | null;
   contenu: string;
   date_envoi: string | Date;
   statut: StatutMessage;
@@ -70,17 +72,16 @@ export interface VisitorMessage {
   email: string;
   id_visiteur?: number | null;
   visiteur?: Visiteur | null;
-  reponse?: Reponse;
+  reponses?: VisitorMessageReply[];
 }
 
-export interface Reponse {
-  id_reponse?: number;
+export interface VisitorMessageReply {
+  id_message: number;
   contenu: string;
   date_envoi: string | Date;
-  id_message: number;
-  id_administrateur: number;
-  message?: VisitorMessage;
-  administrateur?: Administrateur;
+  nom?: string | null;
+  email: string;
+  id_administrateur?: string | null;
 }
 
 export interface Administrateur {
@@ -89,5 +90,5 @@ export interface Administrateur {
   prenom?: string;
   email: string;
   password: string;
-  reponses?: Reponse[];
+  messages?: VisitorMessage[];
 }

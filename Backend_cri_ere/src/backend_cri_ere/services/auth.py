@@ -1,5 +1,5 @@
 from backend_cri_ere.crud.database import db_session
-from backend_cri_ere.models.adminModel import Administrateur
+from backend_cri_ere.models.adminModel import AdminPublic, Administrateur
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
@@ -11,7 +11,7 @@ security = HTTPBearer()
 # 2. Créez une dépendance pour vérifier le jeton Firebase
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-):
+) -> AdminPublic:
     token = credentials.credentials
     try:
         decoded_token = auth.verify_id_token(token)
@@ -24,10 +24,10 @@ async def get_current_user(
 
     with db_session() as session:
         user_info = session.get(Administrateur, decoded_token["uid"])
-    if user_info is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Identifiant de l’administrateur invalide.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return user_info
+        if user_info is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Identifiant de l’administrateur invalide.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return AdminPublic.model_validate(user_info)

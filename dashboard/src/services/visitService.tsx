@@ -1,5 +1,6 @@
+
 import type { CollectionQuery, CollectionPage } from "../types/CollectionTypes";
-import type { Visite } from "../types/DomainTypes";
+import type { StatutVisite, Visite } from "../types/DomainTypes";
 import { APIClient } from "./apiClient";
 
 export async function getMany(
@@ -46,6 +47,20 @@ export function updateOne(
   });
 }
 
+export function updateStatus(
+  id: number,
+  status: StatutVisite,
+): Promise<Visite> {
+  return APIClient.request<Visite>(`/visites/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+
+
 export async function deleteOne(id: number): Promise<void> {
   await APIClient.request<void>(`/visites/delete/${id}`, { method: "DELETE" });
 }
+
+// TODO: revoir l'ajout et la mise à jour des visite dans le dashbord (les end point)

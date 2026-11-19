@@ -265,7 +265,7 @@ def create_public_reservation(
                 "<p>L’équipe du CRI-ERE</p>"
             )
             params: resend.Emails.SendParams = {
-                "from": "CRI-ERE <onboarding@resend.dev>",
+                "from": "CRI-ERE <admin@criere.aclclouds.online>",
                 "to": [visiteur.email],
                 "subject": "Confirmation de votre demande de visite au CRI-ERE",
                 "text": text_body,

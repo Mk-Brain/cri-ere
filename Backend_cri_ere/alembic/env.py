@@ -9,7 +9,7 @@ from sqlmodel import SQLModel
 
 # Importer chaque module enregistre ses tables dans SQLModel.metadata.
 from backend_cri_ere.models import adminModel, courseModel, guideModel
-from backend_cri_ere.models import messageModel, reponseModel, timeSlotModel
+from backend_cri_ere.models import messageModel, timeSlotModel
 from backend_cri_ere.models import visitModel, visitorModel
 
 config = context.config

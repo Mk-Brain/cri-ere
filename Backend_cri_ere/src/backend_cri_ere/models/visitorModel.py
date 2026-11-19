@@ -12,24 +12,25 @@ class VisiteurBase(SQLModel):
     email: str = Field(unique=True)
     telephone: str = Field(unique=True)
 
+
 class VisiteurPublic(VisiteurBase):
     id_visiteur: int
     visites: Any
     messages: Any
 
+
 class VisiteurCreate(VisiteurBase):
     pass
+
 
 class VisiteurUpdate(VisiteurBase):
     pass
 
+
 class Visiteur(VisiteurBase, table=True):
     __tablename__: str = "visiteurs"
 
-    id_visiteur: int | None = Field(
-        default=None,
-        primary_key=True
-    )
+    id_visiteur: int | None = Field(default=None, primary_key=True)
 
     nom: str
     prenom: str | None = None
@@ -38,9 +39,17 @@ class Visiteur(VisiteurBase, table=True):
 
     # Relations
     visites: list["Visite"] = Relationship(
-        back_populates="visiteur"
+        back_populates="visiteur",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
     )
 
     messages: list["VisitorMessage"] = Relationship(
-        back_populates="visiteur"
+        back_populates="visiteur",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
     )

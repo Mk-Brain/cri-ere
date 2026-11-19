@@ -1,10 +1,17 @@
-import json
+import logging
 from typing import Any
+from pydantic import BaseModel, Field, field_validator
 
 from backend_cri_ere.crud.database import db_session
 from backend_cri_ere.crud.repo import Repository
-from backend_cri_ere.models.adminModel import Administrateur
-from backend_cri_ere.models.visitModel import Visite, VisteCreate, VisitePublic, VisteUpdate
+from backend_cri_ere.models.adminModel import  Administrateur
+from backend_cri_ere.models.visitModel import (
+    Visite,
+    VisitePublic,
+    VisiteStatusUpdate,
+    VisteCreate,
+    VisteUpdate,
+)
 from backend_cri_ere.services.auth import get_current_user
 from backend_cri_ere.utils.decode_query import _decode_query_model
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -13,6 +20,24 @@ from sqlmodel import func, select
 
 router = APIRouter(prefix="/api/visites", tags=["visites"])
 crudOperator = Repository(Visite)
+logger = logging.getLogger(__name__)
+
+
+class VisitEmailRequest(BaseModel):
+    sujet: str = Field(min_length=1, max_length=255)
+    contenu: str = Field(min_length=1, max_length=10000)
+
+    @field_validator("sujet", "contenu")
+    @classmethod
+    def strip_required_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Ce champ ne peut pas être vide.")
+        return value
+
+
+class VisitEmailResponse(BaseModel):
+    message: str
 
 """dictionnaire de colonnes autorisées pour aplliquer les filtres et les tri"""
 VISIT_FIELDS = {
@@ -114,7 +139,7 @@ def get_visites(
     print(payload)
     return payload
 
-
+"""récupération d'une visite par son identifiant"""
 @router.get("/{id_visite}")
 def get_visite(
     id_visite: int,
@@ -129,7 +154,7 @@ def get_visite(
             )
         return visite.model_dump()
 
-
+""" Ajout d'une nouvelle visite"""
 @router.post("/new")
 def addvisit(
     visit: VisteCreate,
@@ -140,7 +165,7 @@ def addvisit(
         created_visit = crudOperator.create(session=session, obj_in=new_visit)
         return created_visit.model_dump()
 
-
+""" Mise à jour d'une visite existante """
 @router.patch("/edit/{id_visite}")
 def updatevisit(
     id_visite: int,
@@ -157,7 +182,7 @@ def updatevisit(
         updated_visit = crudOperator.update(session, db_visit, visit)
         return updated_visit.model_dump()
 
-
+""" Suppression d'une visite existante """
 @router.delete("/delete/{id_visite}")
 def deletevisit(
     id_visite: int,
@@ -171,3 +196,23 @@ def deletevisit(
             )
 
     return {"message": "suppression réussie"}
+
+
+""" Mise à jour du statut d'une visite existante """
+@router.patch("/{id}/status")
+def update_visit_status(
+    id: int,
+    status_update: VisiteStatusUpdate,
+    user: Administrateur = Depends(get_current_user),
+) -> dict[str, Any]:
+    with db_session() as session:
+        visite = crudOperator.get(session, id)
+        if visite is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Identifiant de visite invalide",
+            )
+        visite.statut = status_update.status
+        session.flush()
+        return visite.model_dump()
+

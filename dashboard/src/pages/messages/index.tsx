@@ -1,15 +1,53 @@
 import { GridActionsCellItem, type GridColDef } from "@mui/x-data-grid";
+import Chip from "@mui/material/Chip";
 import DeleteIcon from "@mui/icons-material/Delete";
-import SendIcon from '@mui/icons-material/Send';
+import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import ReplyOutlinedIcon from "@mui/icons-material/ReplyOutlined";
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { StatutMessage, type VisitorMessage } from "../../types/DomainTypes";
 import { deleteOne, getMany } from "../../services/MessagesService";
 import ReferenceList from "../../components/ReferenceList";
-import { useNavigate, type NavigateFunction } from "react-router";
+import ResponsiveDialog from "../../components/Dialog";
 import React from "react";
 
+function renderMessageStatus(value: unknown) {
+  switch (value) {
+    case StatutMessage.NON_LU:
+      return (
+        <Chip
+          icon={<MarkEmailUnreadOutlinedIcon />}
+          label="Non lu"
+          color="info"
+          size="small"
+        />
+      );
+    case StatutMessage.LU:
+      return (
+        <Chip
+          icon={<VisibilityOutlinedIcon />}
+          label="Lu"
+          color="default"
+          size="small"
+        />
+      );
+    case StatutMessage.REPONDU:
+      return (
+        <Chip
+          icon={<ReplyOutlinedIcon />}
+          label="Répondu"
+          color="success"
+          size="small"
+        />
+      );
+    default:
+      return String(value ?? "");
+  }
+}
+
 function defineColumns(
-  navigate: NavigateFunction,
   onDelete: (id: number) => Promise<void>,
+  onOpenMessage: (message: VisitorMessage) => void,
 ) {
 const columns: GridColDef[] = [
   { field: "id_message", headerName: "ID", width: 90 },
@@ -17,11 +55,11 @@ const columns: GridColDef[] = [
   { field: "email", headerName: "E-mail", minWidth: 220, flex: 1 },
   { field: "contenu", headerName: "Message", minWidth: 260, flex: 2 },
   { field: "date_envoi", headerName: "Date d'envoi", minWidth: 180 },
-  { field: "statut", headerName: "statut", minWidth: 260, flex: 2 , type:'singleSelect', valueOptions:[
+  { field: "statut", headerName: "statut", minWidth: 160, flex: 2 , type:'singleSelect', valueOptions:[
     {value: StatutMessage.LU, label: "Lu"},
     {value: StatutMessage.NON_LU, label: "Non lu"},
-    {value: StatutMessage.REPONDU, label: "Archivé"},
-  ]},
+    {value: StatutMessage.REPONDU, label: "Répondu"},
+  ], renderCell: ({ value }) => renderMessageStatus(value)},
   {
     field: "actions",
     headerName: "Actions",
@@ -29,10 +67,10 @@ const columns: GridColDef[] = [
     width: 100,
     getActions: ({ row }) => [
       <GridActionsCellItem
-        key="replit-messages"
-        icon={<SendIcon />}
-        label="Répondre (bientôt disponible)"
-        onClick={() => navigate(`/visites/edit/${row.id_message}`)}
+        key="see-messages"
+        icon={<VisibilityIcon />}
+        label="Consulter les messages"
+        onClick={() => onOpenMessage(row)}
       />,
       <GridActionsCellItem
         key="delete-messages"
@@ -47,9 +85,10 @@ const columns: GridColDef[] = [
 return columns
 }
 export const Messages = ()=>{
-   const navigate = useNavigate();
   const [refreshToken, setRefreshToken] = React.useState(0);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [selectedMessage, setSelectedMessage] =
+    React.useState<VisitorMessage | null>(null);
 
   const handleDelete = React.useCallback(async (id: number) => {
     setActionError(null);
@@ -60,20 +99,49 @@ export const Messages = ()=>{
       setActionError(
         error instanceof Error
           ? error.message
-          : "Impossible de supprimer cette visite.",
+          : "Impossible de supprimer ce message.",
       );
     }
   }, []);
   return (
+    <>
   <ReferenceList<VisitorMessage>
     title="Messages"
     createLabel="Créer un message"
     createPath="/messages/new"
     idField="id_message"
-    columns={defineColumns(navigate, handleDelete)}
+    columns={defineColumns(handleDelete, setSelectedMessage)}
     getMany={getMany}
     refreshToken={refreshToken}
       actionError={actionError}
   />
+      <ResponsiveDialog
+        mode="reply"
+        open={selectedMessage !== null}
+        onClose={() => setSelectedMessage(null)}
+        messageId={selectedMessage ? selectedMessage.id_message : 0}
+        content={
+          selectedMessage
+            ? [
+                `De : ${selectedMessage.nom ?? "Visiteur"}`,
+                `E-mail : ${selectedMessage.email}`,
+                "",
+                selectedMessage.contenu,
+                ...(selectedMessage.reponses ?? []).flatMap((response) => [
+                  "",
+                  `Réponse de ${response.nom ?? response.email} — ${new Intl.DateTimeFormat("fr-FR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  }).format(new Date(response.date_envoi))}`,
+                  response.contenu,
+                ]),
+              ].join("\n")
+            : ""
+        }
+        status={selectedMessage ? selectedMessage.statut : "NON_LU"}
+        setRefreshToken={setRefreshToken}
+        setActionError={setActionError}
+      />
+    </>
 );
 } 

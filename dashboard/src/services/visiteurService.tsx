@@ -39,12 +39,24 @@ export function updateOne(
   id: number,
   data: Partial<Omit<Visiteur, "id_visiteur">>,
 ): Promise<Visiteur> {
-  return APIClient.request<Visiteur>(`/visiteurs/edit/${id}`, {
+  return APIClient.request<Visiteur>(`/visiteurs/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 }
 
 export async function deleteOne(id: number): Promise<void> {
-  await APIClient.request<void>(`/visiteurs/delete/${id}`, { method: "DELETE" });
+  await APIClient.request<void>(`/visiteurs/${id}`, { method: "DELETE" });
+}
+
+
+export function sendVisitEmail(
+  visitorId: number,
+  sujet: string,
+  contenu: string,
+): Promise<{ message: string }> {
+  return APIClient.request<{ message: string }>(`/visiteurs/${visitorId}/email`, {
+    method: "POST",
+    body: JSON.stringify({ sujet, contenu }),
+  });
 }

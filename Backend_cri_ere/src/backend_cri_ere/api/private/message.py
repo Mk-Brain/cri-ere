@@ -3,13 +3,16 @@ from typing import Any
 
 from backend_cri_ere.crud.database import db_session
 from backend_cri_ere.crud.repo import Repository
-from backend_cri_ere.models.adminModel import Administrateur
+from backend_cri_ere.models.adminModel import AdminPublic, Administrateur
 from backend_cri_ere.models.visitorModel import Visiteur
 from backend_cri_ere.models.messageModel import (
     VisitorMessage,
     VisitorMessageCreate,
     VisitorMessagePublic,
+    VisitorMessageReplyCreate,
     VisitorMessageUpdate,
+    VisitorMessageUpdateStatus,
+    StatutMessage,
 )
 from backend_cri_ere.services.auth import get_current_user
 from backend_cri_ere.utils.decode_query import _decode_query_model
@@ -88,8 +91,11 @@ def get_messages(
             )
 
     with db_session() as session:
-        count_statement = select(func.count(VisitorMessage.id_message))
-        statement = select(VisitorMessage)
+        root_messages = VisitorMessage.id_message_parent.is_(None)
+        count_statement = select(func.count(VisitorMessage.id_message)).where(
+            root_messages
+        )
+        statement = select(VisitorMessage).where(root_messages)
         if predicates:
             logic = filter_model.get("logicOperator", "and")
             condition = or_(*predicates) if logic == "or" else and_(*predicates)
@@ -126,6 +132,43 @@ def get_message(
                 detail="Identifiant de message invalide",
             )
         return message.model_dump()
+
+
+@router.post("/{id_message}/reply", status_code=status.HTTP_201_CREATED)
+def create_message_reply(
+    id_message: int,
+    reply: VisitorMessageReplyCreate,
+    user: AdminPublic = Depends(get_current_user),
+) -> VisitorMessagePublic:
+    contenu = reply.contenu.strip()
+    if not contenu:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Le contenu de la réponse ne peut pas être vide.",
+        )
+
+    with db_session() as session:
+        message = crudOperator.get(session, id_message)
+        if message is None or message.id_message_parent is not None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Identifiant de message invalide",
+            )
+
+        message.statut = StatutMessage.REPONDU
+        reply_message = VisitorMessage(
+            contenu=contenu,
+            statut=StatutMessage.REPONDU,
+            nom=f"{user.prenom} {user.nom}" if user.prenom else user.nom,
+            email=user.email,
+            id_visiteur=message.id_visiteur,
+            id_message_parent=id_message,
+            id_administrateur=user.id_administrateur,
+        )
+        session.add(reply_message)
+        session.flush()
+        session.refresh(message)
+        return VisitorMessagePublic.model_validate(message)
 
 
 @router.post("/new")
@@ -182,3 +225,22 @@ def deletemessage(
             )
 
     return {"message": "suppression réussie"}
+
+
+
+@router.patch("/{id}/status")
+def update_message_status(
+    id: int,
+    status_update: VisitorMessageUpdateStatus,
+    user: Administrateur = Depends(get_current_user),
+) -> dict[str, Any]:
+    with db_session() as session:
+        message = crudOperator.get(session, id)
+        if message is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Identifiant de message invalide",
+            )
+        message.statut = status_update.status
+        session.flush()
+        return message.model_dump()

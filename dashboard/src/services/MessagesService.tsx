@@ -1,5 +1,5 @@
 import type { CollectionQuery, CollectionPage } from "../types/CollectionTypes";
-import type { VisitorMessage } from "../types/DomainTypes";
+import type { StatutMessage, VisitorMessage } from "../types/DomainTypes";
 import { APIClient } from "./apiClient";
 
 
@@ -53,4 +53,25 @@ export function updateOne(
 
 export async function deleteOne(id: number): Promise<void> {
   await APIClient.request<void>(`/messages/delete/${id}`, { method: "DELETE" });
+}
+
+
+export function updateStatus(
+  id: number,
+  status: StatutMessage,
+): Promise<VisitorMessage> {
+  return APIClient.request<VisitorMessage>(`/messages/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function createReply(
+  id: number,
+  contenu: string,
+): Promise<VisitorMessage> {
+  return APIClient.request<VisitorMessage>(`/messages/${id}/reply`, {
+    method: "POST",
+    body: JSON.stringify({ contenu }),
+  });
 }

@@ -3,7 +3,7 @@ from sqlmodel import Relationship, SQLModel, Field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from backend_cri_ere.models.reponseModel import Reponse
+    from backend_cri_ere.models.messageModel import VisitorMessage
 
 
 class AdminBase(SQLModel):
@@ -30,7 +30,6 @@ class Administrateur(AdminBase, table=True):
     email: str = Field(unique=True, nullable=False)
 
 
-    # Relations
-    reponses: list["Reponse"] = Relationship(
+    messages: list["VisitorMessage"] = Relationship(
         back_populates="administrateur"
     )

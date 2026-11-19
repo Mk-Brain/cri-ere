@@ -6,6 +6,7 @@ from sqlmodel import Relationship, SQLModel, Field
 from datetime import date
 from enum import Enum
 from typing import TYPE_CHECKING, Any
+from sqlalchemy import Column, ForeignKey, Integer
 
 if TYPE_CHECKING:
     from backend_cri_ere.models.courseModel import Parcours
@@ -58,6 +59,10 @@ class VisteUpdate(VisiteBase):
     id_guide: int | None = None
 
 
+class VisiteStatusUpdate(SQLModel):
+    status: StatutVisite
+
+
 #model de table visites
 class Visite(VisiteBase, table=True):
     __tablename__: str = "visites"
@@ -69,7 +74,11 @@ class Visite(VisiteBase, table=True):
 
     # Clés étrangères
     id_visiteur: int = Field(
-        foreign_key="visiteurs.id_visiteur"
+        sa_column=Column(
+            Integer,
+            ForeignKey("visiteurs.id_visiteur", ondelete="CASCADE"),
+            nullable=False,
+        )
     )
 
     id_parcours: int = Field(
