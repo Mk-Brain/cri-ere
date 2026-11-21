@@ -2,6 +2,7 @@ import type {
   FormOptions,
   ReservationFormData,
   ReservationResult,
+  VisitorLookupResult,
   VisitorMessage,
 } from "../types/DomainTypes";
 
@@ -87,6 +88,43 @@ export const createVisitReservation = async (
   }
   return (await response.json()) as ReservationResult;
 };
+
+export const checkVisitorByPhone = async (
+  phone: string,
+): Promise<VisitorLookupResult | null> => {
+  const normalizedPhone = phone.trim();
+  if (!normalizedPhone) return null;
+
+  const params = new URLSearchParams({ phone: normalizedPhone });
+  const response = await fetch(
+    `${API_PREFIX}/visiteurs/check?${params.toString()}`,
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(
+        response,
+        "Erreur lors de la vérification du visiteur.",
+      ),
+    );
+  }
+
+  const data: unknown = await response.json();
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("nom" in data) ||
+    typeof data.nom !== "string" ||
+    !("prenom" in data) ||
+    (data.prenom !== null && typeof data.prenom !== "string") ||
+    !("email" in data) ||
+    typeof data.email !== "string"
+  ) {
+    throw new Error("La réponse du serveur contient un visiteur invalide.");
+  }
+  return { nom: data.nom, prenom: data.prenom, email: data.email };
+};
+
 
 // 3. Envoyer un message de contact
 export const sendContactMessage = async (messageData: VisitorMessage) => {

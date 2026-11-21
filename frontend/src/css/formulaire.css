@@ -41,6 +41,44 @@
   color: #eef6ef;
 }
 
+.form-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.form-progress li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(238, 246, 239, 0.7);
+  font-size: 0.82rem;
+}
+
+.form-progress li.is-current {
+  color: #fff;
+  font-weight: 700;
+}
+
+.form-progress-number {
+  display: grid;
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+}
+
+.form-progress li.is-current .form-progress-number {
+  border-color: #dfeee0;
+  background: #dfeee0;
+  color: #183a2d;
+}
+
 .reservation-form fieldset {
   min-width: 0;
   margin: 0;
@@ -57,6 +95,18 @@
 
 .reservation-form .visit-legend {
   margin-top: 1.75rem;
+}
+
+.form-step-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.form-step-actions .submit-btn,
+.form-step-actions .form-secondary-btn {
+  flex: 1;
+  margin-top: 0;
 }
 
 .form-row {
@@ -156,6 +206,22 @@
   opacity: 0.7;
 }
 
+.form-secondary-btn {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 0.95rem 1.2rem;
+  color: #f4f5ee;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.form-secondary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .back-home-btn {
   display: inline-flex;
   align-items: center;
@@ -180,5 +246,19 @@
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .form-progress {
+    gap: 0.4rem;
+  }
+
+  .form-progress li {
+    align-items: flex-start;
+    flex-direction: column;
+    font-size: 0.72rem;
+  }
+
+  .form-step-actions {
+    gap: 0.65rem;
   }
 }

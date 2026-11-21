@@ -1,21 +1,28 @@
 import logging
+from datetime import date
 from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 from backend_cri_ere.crud.database import db_session
 from backend_cri_ere.crud.repo import Repository
 from backend_cri_ere.models.adminModel import  Administrateur
+from backend_cri_ere.models.courseModel import Parcours
+from backend_cri_ere.models.guideModel import Guide
+from backend_cri_ere.models.timeSlotModel import CreneauHoraire
 from backend_cri_ere.models.visitModel import (
+    StatutVisite,
     Visite,
     VisitePublic,
     VisiteStatusUpdate,
-    VisteCreate,
     VisteUpdate,
 )
+from backend_cri_ere.models.visitorModel import Visiteur
 from backend_cri_ere.services.auth import get_current_user
 from backend_cri_ere.utils.decode_query import _decode_query_model
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, or_
+from sqlalchemy.exc import IntegrityError
+from pydantic import EmailStr
 from sqlmodel import func, select
 
 router = APIRouter(prefix="/api/visites", tags=["visites"])
@@ -38,6 +45,39 @@ class VisitEmailRequest(BaseModel):
 
 class VisitEmailResponse(BaseModel):
     message: str
+
+
+class PrivateVisitorInput(BaseModel):
+    nom: str = Field(min_length=1, max_length=255)
+    prenom: str | None = Field(default=None, max_length=255)
+    email: EmailStr = Field(max_length=254)
+    telephone: str = Field(min_length=1, max_length=50)
+
+    @field_validator("nom", "telephone")
+    @classmethod
+    def strip_required_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Ce champ ne peut pas être vide.")
+        return value
+
+    @field_validator("prenom", mode="after")
+    @classmethod
+    def normalize_optional_text(cls, value: str | None) -> str | None:
+        return value.strip() or None if value is not None else None
+
+
+class PrivateVisitInput(BaseModel):
+    date_visite: date
+    nombre_personnes: int = Field(ge=1)
+    id_parcours: int
+    id_creneau: int
+    id_guide: int
+
+
+class PrivateVisitCreationInput(BaseModel):
+    visiteur: PrivateVisitorInput
+    visite: PrivateVisitInput
 
 """dictionnaire de colonnes autorisées pour aplliquer les filtres et les tri"""
 VISIT_FIELDS = {
@@ -155,15 +195,85 @@ def get_visite(
         return visite.model_dump()
 
 """ Ajout d'une nouvelle visite"""
-@router.post("/new")
+@router.post("/new", status_code=status.HTTP_201_CREATED)
 def addvisit(
-    visit: VisteCreate,
+    creation: PrivateVisitCreationInput,
     user: Administrateur = Depends(get_current_user),
 ) -> dict[str, Any]:
-    new_visit = Visite.model_validate(visit)
-    with db_session() as session:
-        created_visit = crudOperator.create(session=session, obj_in=new_visit)
-        return created_visit.model_dump()
+    request_visit = creation.visite
+    request_visitor = creation.visiteur
+    if request_visit.date_visite < date.today():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La date de visite ne peut pas être dans le passé.",
+        )
+
+    email = str(request_visitor.email).strip().lower()
+    telephone = request_visitor.telephone.strip()
+
+    try:
+        with db_session() as session:
+            parcours = session.get(Parcours, request_visit.id_parcours)
+            creneau = session.get(CreneauHoraire, request_visit.id_creneau)
+            guide = session.get(Guide, request_visit.id_guide)
+            if parcours is None or creneau is None or guide is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Le parcours, le créneau ou le guide sélectionné est introuvable.",
+                )
+
+            existing_visitors = session.exec(
+                select(Visiteur).where(
+                    or_(
+                        func.lower(Visiteur.email) == email,
+                        Visiteur.telephone == telephone,
+                    )
+                )
+            ).all()
+
+            if len(existing_visitors) > 1:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Ces coordonnées sont déjà associées à plusieurs visiteurs.",
+                )
+
+            visiteur = existing_visitors[0] if existing_visitors else None
+            if visiteur is not None:
+                visiteur.email = email
+                visiteur.telephone = telephone
+                visiteur.nom = request_visitor.nom
+                visiteur.prenom = request_visitor.prenom
+                visiteur_id = visiteur.id_visiteur
+            else:
+                visiteur = Visiteur(
+                    nom=request_visitor.nom,
+                    prenom=request_visitor.prenom,
+                    email=email,
+                    telephone=telephone,
+                )
+                session.add(visiteur)
+                session.flush()
+                visiteur_id = visiteur.id_visiteur
+
+            created_visit = Visite(
+                date_visite=request_visit.date_visite,
+                statut=StatutVisite.EN_ATTENTE,
+                nombre_personnes=request_visit.nombre_personnes,
+                id_visiteur=visiteur_id,
+                id_parcours=request_visit.id_parcours,
+                id_creneau=request_visit.id_creneau,
+                id_guide=request_visit.id_guide,
+            )
+            session.add(created_visit)
+            session.flush()
+            session.commit()
+
+            return created_visit.model_dump()
+    except IntegrityError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ces coordonnées sont déjà associées à un autre visiteur.",
+        ) from error
 
 """ Mise à jour d'une visite existante """
 @router.patch("/edit/{id_visite}")

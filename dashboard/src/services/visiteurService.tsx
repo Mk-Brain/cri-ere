@@ -28,6 +28,34 @@ export function getOne(id: number): Promise<Visiteur> {
   return APIClient.request<Visiteur>(`/visiteurs/${id}`);
 }
 
+export interface VisitorLookupResult {
+  nom: string;
+  prenom: string | null;
+  email: string;
+}
+
+export async function checkByPhone(
+  phone: string,
+): Promise<VisitorLookupResult | null> {
+  const normalizedPhone = phone.trim();
+  if (!normalizedPhone) return null;
+
+  const params = new URLSearchParams({ phone: normalizedPhone });
+  try {
+    return await APIClient.request<VisitorLookupResult>(
+      `/visiteurs/check?${params.toString()}`,
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.toLowerCase().includes("introuvable")
+    ) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 export function createOne(data: Omit<Visiteur, "id_visiteur">): Promise<Visiteur> {
   return APIClient.request<Visiteur>("/visiteurs/new", {
     method: "POST",

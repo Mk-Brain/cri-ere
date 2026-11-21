@@ -3,6 +3,45 @@ import type { CollectionQuery, CollectionPage } from "../types/CollectionTypes";
 import type { StatutVisite, Visite } from "../types/DomainTypes";
 import { APIClient } from "./apiClient";
 
+export interface VisitCreationData {
+  visiteur: {
+    nom: string;
+    prenom?: string;
+    email: string;
+    telephone: string;
+  };
+  visite: {
+    date_visite: string;
+    nombre_personnes: number;
+    id_parcours: number;
+    id_creneau: number;
+    id_guide: number;
+  };
+}
+
+export interface VisitAvailabilityOptions {
+  parcours: Array<{ id_parcours: number; nom: string; description?: string }>;
+  creneaux: Array<{
+    id_creneau: number;
+    heure_debut: string;
+    heure_fin: string;
+  }>;
+  guides: Array<{
+    id_guide: number;
+    nom: string;
+    prenom?: string;
+  }>;
+}
+
+export function getAvailabilityOptions(
+  date: string,
+): Promise<VisitAvailabilityOptions> {
+  const params = new URLSearchParams({ reservationDate: date });
+  return APIClient.request<VisitAvailabilityOptions>(
+    `/reservation/options?${params.toString()}`,
+  );
+}
+
 export async function getMany(
   query: CollectionQuery,
 ): Promise<CollectionPage<Visite>> {
@@ -30,7 +69,7 @@ export function getOne(id: number): Promise<Visite> {
   return APIClient.request<Visite>(`/visites/${id}`);
 }
 
-export function createOne(data: Omit<Visite, "id_visite">): Promise<Visite> {
+export function createOne(data: VisitCreationData): Promise<Visite> {
   return APIClient.request<Visite>("/visites/new", {
     method: "POST",
     body: JSON.stringify(data),

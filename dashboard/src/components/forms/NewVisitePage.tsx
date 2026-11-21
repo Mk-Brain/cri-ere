@@ -17,12 +17,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { type Dayjs } from "dayjs";
 import { useNavigate } from "react-router";
 import FormPage from "../FormPage";
-import { StatutVisite } from "../../types/DomainTypes";
-import { createOne as createVisit } from "../../services/visitService";
-import { createOne as createVisiteur } from "../../services/visiteurService";
-import { getAll as getParcours } from "../../services/parcoursService";
-import { getAll as getCreneaux } from "../../services/creneauService";
-import { getAll as getGuides } from "../../services/guideService";
+import {
+  createOne as createVisit,
+  getAvailabilityOptions,
+} from "../../services/visitService";
+import { checkByPhone } from "../../services/visiteurService";
 import type {
   FormFieldValue,
   OptionItem,
@@ -48,60 +47,189 @@ const INITIAL_FORM_STATE: VisitFormState = {
 export default function NewVisitePage() {
   const navigate = useNavigate();
   const [formState, setFormState] = React.useState(INITIAL_FORM_STATE);
-  const [parcoursOptions, setParcoursOptions] = React.useState<OptionItem[]>(
-    [],
-  );
-  const [creneauxOptions, setCreneauxOptions] = React.useState<OptionItem[]>(
-    [],
-  );
-  const [guidesOptions, setGuidesOptions] = React.useState<OptionItem[]>([]);
-  const [isLoadingOptions, setIsLoadingOptions] = React.useState(true);
-  const [optionsError, setOptionsError] = React.useState<string | null>(null);
+  const [availability, setAvailability] = React.useState<{
+    date: string;
+    parcours: OptionItem[];
+    creneaux: OptionItem[];
+    guides: OptionItem[];
+    error: string | null;
+  }>({ date: "", parcours: [], creneaux: [], guides: [], error: null });
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [phoneLookup, setPhoneLookup] = React.useState("");
+  const [debouncedPhoneLookup, setDebouncedPhoneLookup] = React.useState("");
+  const editedVisitorFieldsRef = React.useRef({
+    nom: false,
+    prenom: false,
+    email: false,
+  });
 
   React.useEffect(() => {
-    const fetchOptions = async () => {
-      setIsLoadingOptions(true);
-      setOptionsError(null);
-      try {
-        const [parcours, creneaux, guides] = await Promise.all([
-          getParcours(),
-          getCreneaux(),
-          getGuides(),
-        ]);
+    const date = formState.values.date_visite;
+    if (!date?.isValid()) {
+      return;
+    }
 
-        setParcoursOptions(
-          parcours.map(({ id_parcours, nom }) => ({
-            id: id_parcours,
-            label: nom,
-          })),
-        );
-        setCreneauxOptions(
-          creneaux.map(({ id_creneau, heure_debut, heure_fin }) => ({
+    let isCurrent = true;
+    const dateKey = date.format("YYYY-MM-DD");
+    void getAvailabilityOptions(dateKey)
+      .then((options) => {
+        if (!isCurrent) return;
+        const parcours = options.parcours.map(({ id_parcours, nom }) => ({
+          id: id_parcours,
+          label: nom,
+        }));
+        const creneaux = options.creneaux.map(
+          ({ id_creneau, heure_debut, heure_fin }) => ({
             id: id_creneau,
             label: `${heure_debut} - ${heure_fin}`,
-          })),
+          }),
         );
-        setGuidesOptions(
-          guides.map(({ id_guide, nom, prenom }) => ({
-            id: id_guide,
-            label: `${prenom ? `${prenom} ` : ""}${nom}`,
-          })),
-        );
-      } catch (error) {
-        setOptionsError(
-          error instanceof Error
-            ? error.message
-            : "Impossible de charger les options.",
-        );
-      } finally {
-        setIsLoadingOptions(false);
-      }
-    };
+        const guides = options.guides.map(({ id_guide, nom, prenom }) => ({
+          id: id_guide,
+          label: `${prenom ? `${prenom} ` : ""}${nom}`,
+        }));
 
-    void fetchOptions();
-  }, []);
+        setAvailability({
+          date: dateKey,
+          parcours,
+          creneaux,
+          guides,
+          error: null,
+        });
+        setFormState((current) => {
+          const values = current.values;
+          return {
+            ...current,
+            values: {
+              ...values,
+              id_parcours:
+                typeof values.id_parcours === "number" &&
+                parcours.some((option) => option.id === values.id_parcours)
+                  ? values.id_parcours
+                  : "",
+              id_creneau:
+                typeof values.id_creneau === "number" &&
+                creneaux.some((option) => option.id === values.id_creneau)
+                  ? values.id_creneau
+                  : "",
+              id_guide:
+                typeof values.id_guide === "number" &&
+                guides.some((option) => option.id === values.id_guide)
+                  ? values.id_guide
+                  : "",
+            },
+          };
+        });
+      })
+      .catch((error) => {
+        if (!isCurrent) return;
+        setAvailability({
+          date: dateKey,
+          parcours: [],
+          creneaux: [],
+          guides: [],
+          error:
+            error instanceof Error
+              ? error.message
+              : "Impossible de charger les options disponibles.",
+        });
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [formState.values.date_visite]);
+
+  React.useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedPhoneLookup(phoneLookup.trim());
+    }, 500);
+    return () => window.clearTimeout(timeout);
+  }, [phoneLookup]);
+
+  React.useEffect(() => {
+    const phone = debouncedPhoneLookup;
+    if (phone.length < 6) {
+      setFormState((current) => ({
+        ...current,
+        values: {
+          ...current.values,
+          ...(!editedVisitorFieldsRef.current.email ? { email: "" } : {}),
+          ...(!editedVisitorFieldsRef.current.nom ? { nom: "" } : {}),
+          ...(!editedVisitorFieldsRef.current.prenom ? { prenom: "" } : {}),
+        },
+      }));
+      return;
+    }
+
+    let isCurrent = true;
+    void checkByPhone(phone)
+      .then((visitor) => {
+        if (!isCurrent) return;
+        setFormState((current) => {
+          if (!visitor) {
+            return {
+              ...current,
+              values: {
+                ...current.values,
+                ...(!editedVisitorFieldsRef.current.email ? { email: "" } : {}),
+                ...(!editedVisitorFieldsRef.current.nom ? { nom: "" } : {}),
+                ...(!editedVisitorFieldsRef.current.prenom
+                  ? { prenom: "" }
+                  : {}),
+              },
+            };
+          }
+          return {
+            ...current,
+            values: {
+              ...current.values,
+              ...(!editedVisitorFieldsRef.current.email
+                ? { email: visitor.email }
+                : {}),
+              ...(!editedVisitorFieldsRef.current.nom
+                ? { nom: visitor.nom }
+                : {}),
+              ...(!editedVisitorFieldsRef.current.prenom
+                ? { prenom: visitor.prenom ?? "" }
+                : {}),
+            },
+          };
+        });
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          console.error("Échec de la vérification du visiteur.", error);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [debouncedPhoneLookup]);
+
+  const availabilityDate = formState.values.date_visite?.isValid()
+    ? formState.values.date_visite.format("YYYY-MM-DD")
+    : null;
+  const isLoadingOptions =
+    availabilityDate !== null && availability.date !== availabilityDate;
+  const optionsError =
+    availabilityDate !== null && availability.date === availabilityDate
+      ? availability.error
+      : null;
+  const parcoursOptions =
+    availabilityDate !== null && availability.date === availabilityDate
+      ? availability.parcours
+      : [];
+  const creneauxOptions =
+    availabilityDate !== null && availability.date === availabilityDate
+      ? availability.creneaux
+      : [];
+  const guidesOptions =
+    availabilityDate !== null && availability.date === availabilityDate
+      ? availability.guides
+      : [];
 
   const handleFieldChange = React.useCallback(
     (name: keyof VisitFormValues, value: FormFieldValue) => {
@@ -119,6 +247,9 @@ export default function NewVisitePage() {
   const handleReset = React.useCallback(() => {
     setFormState(INITIAL_FORM_STATE);
     setSubmitError(null);
+    setPhoneLookup("");
+    setDebouncedPhoneLookup("");
+    editedVisitorFieldsRef.current = { nom: false, prenom: false, email: false };
   }, []);
 
   const handleSubmit = React.useCallback(
@@ -178,25 +309,20 @@ export default function NewVisitePage() {
 
       setIsSubmitting(true);
       try {
-        const visiteur = await createVisiteur({
-          nom: nom.trim(),
-          prenom: prenom?.trim() || undefined,
-          email: email.trim(),
-          telephone: telephone.trim(),
-        });
-
-        if (visiteur.id_visiteur == null) {
-          throw new Error("Impossible d’obtenir l’identifiant du visiteur.");
-        }
-
         await createVisit({
-          date_visite: date_visite.format("YYYY-MM-DD"),
-          statut: StatutVisite.EN_ATTENTE,
-          nombre_personnes,
-          id_visiteur: visiteur.id_visiteur,
-          id_parcours,
-          id_creneau,
-          id_guide,
+          visiteur: {
+            nom: nom.trim(),
+            prenom: prenom?.trim() || undefined,
+            email: email.trim(),
+            telephone: telephone.trim(),
+          },
+          visite: {
+            date_visite: date_visite.format("YYYY-MM-DD"),
+            nombre_personnes,
+            id_parcours,
+            id_creneau,
+            id_guide,
+          },
         });
         navigate("/visites");
       } catch (error) {
@@ -214,8 +340,18 @@ export default function NewVisitePage() {
 
   const handleTextChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
+      const name = event.target.name as keyof VisitFormValues;
+      if (name === "telephone") {
+        setPhoneLookup(event.target.value);
+      } else if (
+        name === "nom" ||
+        name === "prenom" ||
+        name === "email"
+      ) {
+        editedVisitorFieldsRef.current[name] = true;
+      }
       handleFieldChange(
-        event.target.name as keyof VisitFormValues,
+        name,
         event.target.value,
       );
     },
@@ -275,6 +411,31 @@ export default function NewVisitePage() {
           <Grid container spacing={2} sx={{ mb: 1 }}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
+                value={values.telephone ?? ""}
+                onChange={handleTextChange}
+                name="telephone"
+                label="Téléphone"
+                required
+                error={!!errors.telephone}
+                helperText={errors.telephone ?? " "}
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                type="email"
+                value={values.email ?? ""}
+                onChange={handleTextChange}
+                name="email"
+                label="Adresse email"
+                required
+                error={!!errors.email}
+                helperText={errors.email ?? " "}
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
                 value={values.nom ?? ""}
                 onChange={handleTextChange}
                 name="nom"
@@ -296,31 +457,8 @@ export default function NewVisitePage() {
                 fullWidth
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                type="email"
-                value={values.email ?? ""}
-                onChange={handleTextChange}
-                name="email"
-                label="Adresse email"
-                required
-                error={!!errors.email}
-                helperText={errors.email ?? " "}
-                fullWidth
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                value={values.telephone ?? ""}
-                onChange={handleTextChange}
-                name="telephone"
-                label="Téléphone"
-                required
-                error={!!errors.telephone}
-                helperText={errors.telephone ?? " "}
-                fullWidth
-              />
-            </Grid>
+            
+            
           </Grid>
 
           <Divider sx={{ my: 2 }} />
@@ -336,6 +474,7 @@ export default function NewVisitePage() {
                   value={values.date_visite ? dayjs(values.date_visite) : null}
                   onChange={handleDateChange}
                   format="DD/MM/YYYY"
+                  minDate={dayjs()}
                   slotProps={{
                     textField: {
                       error: !!errors.date_visite,

@@ -156,8 +156,8 @@ def create_public_reservation(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="La date de visite ne peut pas être dans le passé.",
         )
-# TODO: verrifier la date côte client
 
+    visiteur_id = 0
     email = reservation.visiteur.email
     telephone = reservation.visiteur.telephone.strip()
     request_data = reservation.visite
@@ -173,36 +173,21 @@ def create_public_reservation(
                     detail="Le parcours, le créneau ou le guide sélectionné est introuvable.",
                 )
 
-            existing_visitors = session.exec(
+            existing_visitor = session.exec(
                 select(Visiteur).where(
                     or_(
                         Visiteur.email.ilike(email),
                         Visiteur.telephone == telephone,
                     )
                 )
-            ).all()
-            if len(existing_visitors) > 1:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=(
-                        "L'adresse e-mail et le téléphone correspondent à des "
-                        "visiteurs différents. Contactez l'équipe pour corriger vos informations."
-                    ),
-                )
-
-            if existing_visitors:
-                visiteur = existing_visitors[0]
-                if (
-                    visiteur.email.strip().lower() != email
-                    or visiteur.telephone.strip() != telephone
-                ):
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail=(
-                            "L'adresse e-mail ou le téléphone est déjà associé à "
-                            "un autre profil. Vérifiez vos informations."
-                        ),
-                    )
+            ).first()
+        
+            if existing_visitor:
+                visiteur_id = existing_visitor.id_visiteur
+                existing_visitor.email = email
+                existing_visitor.telephone = telephone
+                existing_visitor.nom = reservation.visiteur.nom
+                existing_visitor.prenom = reservation.visiteur.prenom
             else:
                 visiteur = Visiteur(
                     nom=reservation.visiteur.nom,
@@ -212,11 +197,12 @@ def create_public_reservation(
                 )
                 session.add(visiteur)
                 session.flush()
+                visiteur_id = visiteur.id_visiteur
 
             visite = Visite(
                 date_visite=request_data.date_visite,
                 nombre_personnes=request_data.nombre_personnes,
-                id_visiteur=visiteur.id_visiteur,
+                id_visiteur=visiteur_id,
                 id_parcours=request_data.id_parcours,
                 id_creneau=request_data.id_creneau,
                 id_guide=request_data.id_guide,
@@ -224,7 +210,7 @@ def create_public_reservation(
             session.add(visite)
             session.flush()
 
-            greeting_name = visiteur.prenom or visiteur.nom
+            greeting_name = reservation.visiteur.prenom or reservation.visiteur.nom
             visitor_name = escape(greeting_name)
             course_name = escape(parcours.nom)
             guide_name = escape(
@@ -266,7 +252,7 @@ def create_public_reservation(
             )
             params: resend.Emails.SendParams = {
                 "from": "CRI-ERE <admin@criere.aclclouds.online>",
-                "to": [visiteur.email],
+                "to": [email],
                 "subject": "Confirmation de votre demande de visite au CRI-ERE",
                 "text": text_body,
                 "html": html_body,
@@ -287,11 +273,11 @@ def create_public_reservation(
                 "id_creneau": visite.id_creneau,
                 "id_guide": visite.id_guide,
                 "visiteur": {
-                    "id_visiteur": visiteur.id_visiteur,
-                    "nom": visiteur.nom,
-                    "prenom": visiteur.prenom,
-                    "email": visiteur.email,
-                    "telephone": visiteur.telephone,
+                    "id_visiteur": visiteur_id,
+                    "nom": reservation.visiteur.nom,
+                    "prenom": reservation.visiteur.prenom,
+                    "email": email,
+                    "telephone": telephone,
                 },
             }
     except IntegrityError as error:

@@ -31,6 +31,12 @@ export interface Visiteur {
 
 }
 
+export interface VisitorLookupResult {
+  nom: string;
+  prenom: string | null;
+  email: string;
+}
+
 export interface Guide {
   id_guide: number;
   nom: string;

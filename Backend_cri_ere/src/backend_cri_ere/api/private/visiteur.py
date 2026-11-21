@@ -20,6 +20,7 @@ from backend_cri_ere.models.messageModel import StatutMessage, VisitorMessage
 from backend_cri_ere.services.auth import get_current_user
 from backend_cri_ere.utils.decode_query import _decode_query_model
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy import and_, or_
 from sqlmodel import func, select
 
@@ -122,6 +123,40 @@ def get_visiteurs(
     return payload
 
 
+class VisitorLookupResponse(BaseModel):
+    nom: str
+    prenom: str | None = None
+    email: str
+
+
+@router.get("/check", response_model=VisitorLookupResponse)
+def get_visiteur_by_phone(
+    phone: str,
+) -> VisitorLookupResponse:
+    phone = phone.strip() if phone else ""
+    if not phone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Un numéro de téléphone est requis.",
+        )
+
+    with db_session() as session:
+        visiteurs = session.exec(
+            select(Visiteur).where(Visiteur.telephone == phone).limit(2)
+        ).all()
+        if len(visiteurs) != 1:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Visiteur introuvable.",
+            )
+        visiteur = visiteurs[0]
+        return VisitorLookupResponse(
+            nom=visiteur.nom,
+            prenom=visiteur.prenom,
+            email=visiteur.email,
+        )
+
+
 @router.get("/{id_visiteur}")
 def get_visiteur(
     id_visiteur: int,
@@ -129,20 +164,6 @@ def get_visiteur(
 ) -> dict[str, Any]:
     with db_session() as session:
         visiteur = crudOperator.get(session, id_visiteur)
-        if visiteur is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Identifiant de visiteur invalide",
-            )
-        return visiteur.model_dump()
-
-@router.get("/{email}")
-def get_visiteur_by_email(
-    email: str,
-    user: Administrateur = Depends(get_current_user),
-) -> dict[str, Any]:
-    with db_session() as session:
-        visiteur = session.exec(select(Visiteur).where(Visiteur.email == email)).first()
         if visiteur is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
